@@ -7,16 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class Item extends Model
 {
     protected $fillable = [
-        'user_id','category_id','condition_id',
-        'name','description','brand','price',
-        'status','likes_count','comments_count','sold_at',
+        'user_id', 'category_id', 'condition_id',
+        'name', 'description', 'brand', 'image', 'price',
+        'status', 'likes_count', 'comments_count', 'sold_at',
     ];
 
-    // 画像（1:N）
-    public function images()
-    {
-        return $this->hasMany(ItemImage::class);
-    }
+    protected $casts = [
+        'sold_at' => 'datetime',
+    ];
 
     // 出品者
     public function user()
@@ -30,7 +28,7 @@ class Item extends Model
         return $this->belongsTo(Category::class);
     }
 
-    // 状態（FK: condition_id は tinyint）
+    // 状態
     public function condition()
     {
         return $this->belongsTo(Condition::class, 'condition_id');
@@ -52,5 +50,11 @@ class Item extends Model
     public function purchase()
     {
         return $this->hasOne(Purchase::class);
+    }
+
+    // 便宜：いいねしたユーザー
+    public function likedUsers()
+    {
+        return $this->belongsToMany(User::class, 'likes');
     }
 }

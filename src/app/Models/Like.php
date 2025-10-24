@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Like extends Model
 {
-    protected $fillable = ['user_id','item_id','type'];
+    // likes は (user_id, item_id) の複合UNIQUE、type列は無し
+    protected $fillable = ['user_id', 'item_id'];
 
     public function item()
     {

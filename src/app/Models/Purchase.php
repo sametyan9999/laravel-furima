@@ -7,11 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 class Purchase extends Model
 {
     protected $fillable = [
-        'buyer_user_id','item_id','amount',
-        'payment_method','payment_status','stripe_payment_intent_id',
+        'buyer_user_id', 'item_id', 'amount',
+        'payment_method', 'payment_status', 'stripe_payment_intent_id',
         'purchased_at',
-        'shipping_name','shipping_postal_code','shipping_prefecture',
-        'shipping_city','shipping_address1','shipping_address2','shipping_phone',
+        'shipping_name', 'shipping_postal_code', 'shipping_prefecture',
+        'shipping_city', 'shipping_address1', 'shipping_address2', 'shipping_phone',
+    ];
+
+    protected $casts = [
+        'purchased_at' => 'datetime',
     ];
 
     public function item()

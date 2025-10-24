@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Condition extends Model
 {
-    public $timestamps = false; // マイグレーションでtimestampsなし
+    public $timestamps = false; // id, name のみ
     protected $fillable = ['name'];
 
     public function items()
     {
-        return $this->hasMany(Item::class, 'condition_id'); // FK名を明示
+        return $this->hasMany(Item::class, 'condition_id');
     }
 }
