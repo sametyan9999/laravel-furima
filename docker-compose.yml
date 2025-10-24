@@ -1,0 +1,42 @@
+services:
+  nginx:
+    image: nginx:1.27-alpine         # ← arm64対応タグに更新
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./src:/var/www
+    depends_on:
+      - php
+
+  php:
+    build: ./docker/php               # php:8.1/8.2-fpm の Dockerfile でOK
+    volumes:
+      - ./src:/var/www
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:8.4                  # ← arm64対応の LTS
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel_db
+      MYSQL_USER: laravel_user
+      MYSQL_PASSWORD: laravel_pass
+    volumes:
+      - ./docker/mysql/data:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+    ports:
+      - "3306:3306"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest  # ← arm64対応
+    environment:
+      PMA_ARBITRARY: 1
+      PMA_HOST: mysql
+      PMA_USER: laravel_user
+      PMA_PASSWORD: laravel_pass
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
