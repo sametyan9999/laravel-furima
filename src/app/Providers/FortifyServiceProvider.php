@@ -19,6 +19,10 @@ use Laravel\Fortify\Contracts\ResetPasswordViewResponse;
 use Laravel\Fortify\Contracts\TwoFactorChallengeViewResponse;
 use Laravel\Fortify\Contracts\VerifyEmailViewResponse;
 
+// ★ 新規追加：登録後のリダイレクト制御用
+use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
+use App\Http\Responses\RegisterResponse;
+
 class FortifyServiceProvider extends ServiceProvider
 {
     public function register(): void
@@ -81,6 +85,13 @@ class FortifyServiceProvider extends ServiceProvider
                 }
             };
         });
+
+        /**
+         * ====== ★ 新規追加 ======
+         * Fortify の RegisterResponse を差し替え
+         * 登録後にマイページ（またはプロフィール初回設定）へ遷移
+         */
+        $this->app->singleton(RegisterResponseContract::class, RegisterResponse::class);
     }
 
     public function boot(): void
@@ -94,14 +105,12 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
 
         /**
-         * ====== Fortify ビュー割り当て（保険） ======
-         * こちらも設定しておくと、より堅牢です。
+         * ====== Fortify ビュー割り当て ======
          */
         Fortify::loginView(fn () => view('auth.login'));
         Fortify::registerView(fn () => view('auth.register'));
         Fortify::requestPasswordResetLinkView(fn () => view('auth.forgot-password'));
         Fortify::resetPasswordView(fn ($request) => view('auth.reset-password', ['request' => $request]));
         Fortify::verifyEmailView(fn () => view('auth.verify-email'));
-        // Fortify::twoFactorChallengeView(fn () => view('auth.two-factor-challenge'));
     }
 }

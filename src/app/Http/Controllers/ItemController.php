@@ -89,39 +89,43 @@ class ItemController extends Controller
 
     /**
      * 出品登録
+     * 表仕様：
+     *  - 商品名 必須
+     *  - 商品説明 必須（最大255）
+     *  - 商品画像 アップロード必須（jpeg/png）
+     *  - カテゴリー 選択必須
+     *  - 状態 必須
+     *  - 価格 必須・0円以上
      */
     public function store(Request $request)
     {
         $rules = [
-            'name'        => ['required', 'string', 'max:120'],
-            'description' => ['required', 'string', 'max:255'],
-            'brand'       => ['nullable', 'string', 'max:80'],
-            'image'       => ['nullable', 'url'],
-            'image_file'  => ['nullable','image','mimes:jpeg,png','max:4096'],
-            'category_id' => ['nullable', 'exists:categories,id'],
-            'condition_id'=> ['required', 'integer', 'exists:conditions,id'],
-            'price'       => ['required', 'integer', 'min:0'],
+            'name'         => ['required', 'string', 'max:120'],
+            'description'  => ['required', 'string', 'max:255'],
+            'brand'        => ['nullable', 'string', 'max:80'],
+            // ★ 画像はアップロード必須（URLは不可）
+            'image_file'   => ['required','image','mimes:jpeg,png','max:4096'],
+            // ★ カテゴリは必須へ
+            'category_id'  => ['required', 'exists:categories,id'],
+            'condition_id' => ['required', 'integer', 'exists:conditions,id'],
+            'price'        => ['required', 'integer', 'min:0'],
         ];
         $data = $request->validate($rules);
 
-        if (empty($data['image']) && $request->hasFile('image_file')) {
-            $path = $request->file('image_file')->store('public/items');
-            $data['image'] = Storage::url($path);
-        }
-        if (empty($data['image'])) {
-            return back()->withErrors(['image' => '画像のURL もしくは 画像ファイルを指定してください'])->withInput();
-        }
+        // 画像保存（storage/app/public/items → /storage/items/***.jpg）
+        $path = $request->file('image_file')->store('public/items');
+        $imageUrl = Storage::url($path);
 
         $item = Item::create([
-            'user_id'       => Auth::id(),
-            'category_id'   => $data['category_id'] ?? null,
-            'condition_id'  => $data['condition_id'],
-            'name'          => $data['name'],
-            'description'   => $data['description'],
-            'brand'         => $data['brand'] ?? null,
-            'image'         => $data['image'],
-            'price'         => $data['price'],
-            'status'        => 'on_sale',
+            'user_id'      => Auth::id(),
+            'category_id'  => $data['category_id'],
+            'condition_id' => $data['condition_id'],
+            'name'         => $data['name'],
+            'description'  => $data['description'],
+            'brand'        => $data['brand'] ?? null,
+            'image'        => $imageUrl,
+            'price'        => $data['price'],
+            'status'       => 'on_sale',
         ]);
 
         return redirect()->route('items.show', $item)->with('status', '出品しました');

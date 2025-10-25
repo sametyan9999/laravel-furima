@@ -4,15 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>@yield('title','COACHTECH フリマ')</title>
-
-  {{-- 共通CSS --}}
-  <link rel="stylesheet" href="{{ asset('css/base.css') }}">
-
-  {{-- 画面ごとの追加CSSは各ビューで @push('styles') --}}
+  <link rel="stylesheet" href="{{ asset('css/app.css') }}">
   @stack('styles')
 </head>
 <body>
-  @include('components.header')
+  {{-- ページ側で @section('header') があればそれを使い、無ければ通常ヘッダー --}}
+  @hasSection('header')
+    @yield('header')
+  @else
+    @include('components.header')
+  @endif
+
   <main class="container">@yield('content')</main>
+
+  @stack('scripts')
 </body>
 </html>

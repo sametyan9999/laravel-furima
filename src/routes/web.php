@@ -32,7 +32,7 @@ Route::middleware(['auth'])->group(function () {
     // いいね（US005-FN018）
     Route::post('/items/{item}/like', [ItemController::class, 'toggleLike'])->name('items.like');
 
-    // コメント送信（US006-FN020）※仕様に合わせログイン必須
+    // コメント送信（US006-FN020）
     Route::post('/items/{item}/comments', [ItemController::class, 'storeComment'])->name('items.comments.store');
 
     // 購入フロー PG06

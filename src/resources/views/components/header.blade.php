@@ -10,13 +10,10 @@
       <input type="search" name="q" value="{{ request('q') }}" placeholder="なにをお探しですか？">
     </form>
 
-    {{-- ナビゲーション --}}
+    {{-- 右上ナビ：常にログイン＆マイページを表示 --}}
     <nav class="gt-nav">
-      {{-- ログイン・マイページは白文字のみ（背景黒） --}}
       <a href="{{ route('login') }}" class="gt-link">ログイン</a>
       <a href="{{ route('mypage.index') }}" class="gt-link">マイページ</a>
-
-      {{-- 出品ボタンのみ白い四角 --}}
       <a href="{{ route('items.create') }}" class="gt-btn gt-btn--sell">出品</a>
     </nav>
   </div>

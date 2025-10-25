@@ -45,9 +45,8 @@ class ProfileController extends Controller
 
     /**
      * プロフィール更新
-     * ProfileRequest準拠：
      *  - avatar: jpeg/png
-     *  - name max:20（ユーザ名は users.name を更新）
+     *  - username max:20（users.name を更新）
      *  - postal_code サイズ8（123-4567）
      */
     public function update(Request $request)
@@ -55,27 +54,32 @@ class ProfileController extends Controller
         $user = Auth::user();
 
         $data = $request->validate([
-            'name'         => ['required','string','max:20'],
-            'postal_code'  => ['required','string','size:8','regex:/^\d{3}-\d{4}$/'],
-            'address_line1'=> ['required','string','max:255'],
-            'address_line2'=> ['nullable','string','max:255'],
-            'phone'        => ['nullable','string','max:20'],
-            'bio'          => ['nullable','string','max:255'],
-            'avatar'       => ['nullable','image','mimes:jpeg,png','max:4096'],
+            'username'      => ['required','string','max:20'],
+            'postal_code'   => ['required','string','size:8','regex:/^\d{3}-\d{4}$/'],
+            'address_line1' => ['required','string','max:255'],
+            'address_line2' => ['nullable','string','max:255'],
+            'phone'         => ['nullable','string','max:20'],
+            'bio'           => ['nullable','string','max:255'],
+            'avatar'        => ['nullable','image','mimes:jpeg,png','max:4096'],
         ]);
 
-        // ユーザー名
-        $user->name = $data['name'];
+        // ユーザー名（Blade 側の name="username" と一致させる）
+        $user->name = $data['username'];
         $user->save();
 
         // プロフィール
         $profile = $user->profile ?? new Profile(['user_id' => $user->id]);
-        $profile->fill($data);
+        $profile->postal_code   = $data['postal_code'];
+        $profile->address_line1 = $data['address_line1'];
+        $profile->address_line2 = $data['address_line2'] ?? null;
+        $profile->phone         = $data['phone'] ?? null;
+        $profile->bio           = $data['bio'] ?? null;
 
         if ($request->hasFile('avatar')) {
             $path = $request->file('avatar')->store('public/avatars');
             $profile->avatar_path = \Storage::url($path);
         }
+
         $profile->save();
 
         return redirect()->route('mypage.index')->with('status', 'プロフィールを更新しました');

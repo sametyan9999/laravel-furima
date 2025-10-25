@@ -1,23 +1,33 @@
+/* ================================
+   Auth 共通（ログイン/登録/認証メール）
+   ※ページ専用の幅や余白は各ページCSSへ
+================================ */
+
+/* コンテナの基本余白だけ共通化 */
 .auth-container,
 .verify-container {
     max-width: 740px;
-    margin: 48px auto;
-    padding: 0 20px
+    margin: 0 auto;
+    padding: 0 20px;
 }
 
+/* タイトルの共通スタイル */
 .page-title {
-    font-size: 24px;
+    font-size: 28px;
     font-weight: 700;
-    margin: 24px 0 32px
+    text-align: center;
+    margin: 0 0 32px;
 }
 
+/* 入力 */
 .form-group {
-    margin-bottom: 18px
+    margin-bottom: 18px;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 8px
+    margin-bottom: 8px;
+    font-weight: 700;
 }
 
 .form-group input,
@@ -28,16 +38,18 @@
     border: 1px solid #d4d4d4;
     border-radius: 4px;
     padding: 10px 12px;
-    background: #fff
+    background: #fff;
+    font-size: 16px;
 }
 
 .form-group textarea {
-    height: auto
+    height: auto;
 }
 
+/* ボタン（色はサイト共通の赤） */
 .form-actions {
     margin-top: 24px;
-    text-align: center
+    text-align: center;
 }
 
 .btn {
@@ -48,62 +60,50 @@
     padding: 0 18px;
     border-radius: 4px;
     border: none;
-    cursor: pointer
+    cursor: pointer;
+    font-weight: 700;
+    letter-spacing: .02em;
 }
 
 .btn-wide {
-    width: 320px
+    width: 100%;
 }
 
 .btn-primary {
-    background: #ea6b65;
-    color: #fff
+    background: #E85D55;
+    color: #fff;
 }
 
 .btn-outline {
-    border: 1px solid #ea6b65;
-    color: #ea6b65;
-    background: #fff
+    border: 1px solid #E85D55;
+    color: #E85D55;
+    background: #fff;
 }
 
 .btn-gray {
     background: #efefef;
-    color: #222
+    color: #222;
 }
 
+/* 補助 */
 .error {
     color: #e64646;
     font-size: 12px;
-    margin-top: 6px
+    margin-top: 6px;
 }
 
 .help-link {
     text-align: center;
-    margin-top: 16px
+    margin-top: 16px;
 }
 
 .help-link a {
     color: #4b66ea;
-    text-decoration: underline
+    text-decoration: none;
+    /* ← 下線を消す */
 }
 
-.inline {
-    display: inline
-}
-
-.resend-form {
-    margin-top: 16px
-}
-
-.link {
-    background: none;
-    border: none;
-    color: #4b66ea;
-    text-decoration: underline;
-    cursor: pointer
-}
-
-.flash.success {
-    color: #1a7f37;
-    margin-top: 12px
+.help-link a:hover {
+    opacity: .8;
+    /* 任意のホバー表現（下線は出さない） */
 }

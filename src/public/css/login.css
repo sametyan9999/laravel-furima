@@ -1,0 +1,15 @@
+/* ================================
+   Login ページ専用
+================================ */
+
+/* 参考画像通りの上下余白に調整 */
+.login-page .auth-container {
+    margin-top: 80px;
+    margin-bottom: 80px;
+}
+
+/* 入力欄とボタンの横幅を固定（参考画像に合わせて） */
+.login-page .auth-form {
+    max-width: 560px;
+    margin: 0 auto;
+}
