@@ -1,26 +1,29 @@
 @extends('layouts.app')
-
 @section('title','商品一覧')
 
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/items.css') }}">
+@endpush
+
 @section('content')
-  {{-- タブ（おすすめ / マイリスト） --}}
-  @php $tab = request('tab') === 'mylist' ? 'mylist' : 'recommend'; @endphp
-  <div class="tabs">
-    <a href="{{ route('items.index') }}" class="{{ $tab==='recommend' ? 'active' : '' }}">おすすめ</a>
-    <a href="{{ route('items.index', ['tab'=>'mylist']) }}" class="{{ $tab==='mylist' ? 'active' : '' }}">マイリスト</a>
+  <div class="tab">
+    @php $tab = request('tab','recommend'); @endphp
+    <a class="tab__link {{ $tab==='recommend'?'is-active':'' }}"
+       href="{{ route('items.index') }}">おすすめ</a>
+    <a class="tab__link {{ $tab==='mylist'?'is-active':'' }}"
+       href="{{ route('items.index',['tab'=>'mylist']) }}">マイリスト</a>
   </div>
 
-  {{-- 商品グリッド --}}
-  <div class="grid mt24">
+  <div class="grid">
     @forelse($items as $item)
-      @include('components.item-card', ['item' => $item])
+      <a href="{{ route('items.show',$item) }}" class="card">
+        <div class="card__thumb">
+          <img src="{{ $item->image }}" alt="{{ $item->name }}">
+        </div>
+        <div class="card__name">{{ $item->name }}</div>
+      </a>
     @empty
-      <p>商品がありません。</p>
+      <p class="mt-24">商品がありません。</p>
     @endforelse
-  </div>
-
-  {{-- ページネーション --}}
-  <div class="mt24">
-    {{ $items->withQueryString()->links() }}
   </div>
 @endsection

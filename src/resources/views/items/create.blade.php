@@ -1,91 +1,91 @@
 @extends('layouts.app')
+
 @section('title','商品の出品')
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/sell.css') }}">
+@endpush
+
 @section('content')
-<h1 class="section-title" style="text-align:center;margin-top:24px;">商品の出品</h1>
+<div class="container sell-container">
+  <h1 class="page-title">商品の出品</h1>
 
-<form class="mt24" action="{{ route('items.store') }}" method="POST" enctype="multipart/form-data">
-  @csrf
+  <form method="POST" action="{{ route('items.store') }}" enctype="multipart/form-data" class="form">
+    @csrf
 
-  {{-- 画像アップロード --}}
-  <div class="mt16">
-    <label class="muted">商品画像</label>
-    <div style="border:1px dashed #bbb;border-radius:8px;padding:20px;text-align:center;">
-      <label class="btn" style="cursor:pointer;">
-        画像を選択する
-        <input type="file" name="images[]" accept=".jpg,.jpeg,.png" multiple style="display:none">
-      </label>
-    </div>
-    @error('images.*')<div class="muted" style="color:#e2504e">{{ $message }}</div>@enderror
-  </div>
-
-  <hr class="mt32">
-
-  {{-- 商品の詳細 --}}
-  <div class="section-title">商品の詳細</div>
-
-  {{-- カテゴリー（チップ）--}}
-  <div class="mt8">
-    <label class="muted">カテゴリー</label>
-    <div class="mt8" style="display:flex;flex-wrap:wrap;gap:10px;">
-      @foreach($categories as $cat)
-        <label class="badge" style="border:1px solid #e2504e;color:#e2504e;cursor:pointer;">
-          <input type="radio" name="category_id" value="{{ $cat->id }}" style="display:none"
-                 {{ old('category_id')==$cat->id ? 'checked' : '' }}>
-          {{ $cat->name }}
+    {{-- 画像アップロード --}}
+    <section class="section">
+      <h2 class="section-title">商品画像</h2>
+      <div class="image-uploader">
+        <label class="btn btn-outline">
+          画像を選択する
+          <input type="file" name="image" accept="image/png,image/jpeg" hidden>
         </label>
-      @endforeach
+        @error('image')<p class="error">{{ $message }}</p>@enderror
+      </div>
+    </section>
+
+    {{-- 詳細 --}}
+    <section class="section">
+      <h2 class="section-title">商品の詳細</h2>
+
+      {{-- カテゴリー（タグ風） --}}
+      <div class="category-chip-list">
+        @foreach($categories as $cat)
+          <label class="chip">
+            <input type="radio" name="category_id" value="{{ $cat->id }}" {{ old('category_id')==$cat->id?'checked':'' }}>
+            <span>{{ $cat->name }}</span>
+          </label>
+        @endforeach
+      </div>
+      @error('category_id')<p class="error">{{ $message }}</p>@enderror
+
+      {{-- 状態 --}}
+      <div class="form-group mt24">
+        <label for="condition_id">商品の状態</label>
+        <select id="condition_id" name="condition_id" required>
+          <option value="" disabled {{ old('condition_id') ? '' : 'selected' }}>選択してください</option>
+          @foreach($conditions as $cond)
+            <option value="{{ $cond->id }}" {{ old('condition_id')==$cond->id?'selected':'' }}>{{ $cond->name }}</option>
+          @endforeach
+        </select>
+        @error('condition_id')<p class="error">{{ $message }}</p>@enderror
+      </div>
+    </section>
+
+    {{-- 名前・説明・ブランド・価格 --}}
+    <section class="section">
+      <div class="form-group">
+        <label for="name">商品名</label>
+        <input id="name" name="name" type="text" value="{{ old('name') }}" required>
+        @error('name')<p class="error">{{ $message }}</p>@enderror
+      </div>
+
+      <div class="form-group">
+        <label for="brand">ブランド名</label>
+        <input id="brand" name="brand" type="text" value="{{ old('brand') }}">
+        @error('brand')<p class="error">{{ $message }}</p>@enderror
+      </div>
+
+      <div class="form-group">
+        <label for="description">商品の説明</label>
+        <textarea id="description" name="description" rows="5">{{ old('description') }}</textarea>
+        @error('description')<p class="error">{{ $message }}</p>@enderror
+      </div>
+
+      <div class="form-group price">
+        <label for="price">販売価格</label>
+        <div class="price-input">
+          <span class="yen">¥</span>
+          <input id="price" name="price" type="number" min="0" step="1" value="{{ old('price') }}" required>
+        </div>
+        @error('price')<p class="error">{{ $message }}</p>@enderror
+      </div>
+    </section>
+
+    <div class="form-actions">
+      <button class="btn btn-primary btn-wide" type="submit">出品する</button>
     </div>
-    @error('category_id')<div class="muted" style="color:#e2504e">{{ $message }}</div>@enderror
-  </div>
-
-  {{-- 状態（セレクト）--}}
-  <div class="mt24">
-    <label class="muted">商品の状態</label>
-    <select name="condition_id" required>
-      <option value="">選択してください</option>
-      @foreach($conditions as $cond)
-        <option value="{{ $cond->id }}" {{ old('condition_id')==$cond->id ? 'selected' : '' }}>
-          {{ $cond->name }}
-        </option>
-      @endforeach
-    </select>
-    @error('condition_id')<div class="muted" style="color:#e2504e">{{ $message }}</div>@enderror
-  </div>
-
-  <hr class="mt32">
-
-  {{-- 商品名と説明 --}}
-  <div class="mt8">
-    <label class="muted">商品名</label>
-    <input type="text" name="name" value="{{ old('name') }}" required>
-    @error('name')<div class="muted" style="color:#e2504e">{{ $message }}</div>@enderror
-  </div>
-
-  <div class="mt16">
-    <label class="muted">ブランド名</label>
-    <input type="text" name="brand" value="{{ old('brand') }}">
-    @error('brand')<div class="muted" style="color:#e2504e">{{ $message }}</div>@enderror
-  </div>
-
-  <div class="mt16">
-    <label class="muted">商品の説明</label>
-    <textarea name="description">{{ old('description') }}</textarea>
-    @error('description')<div class="muted" style="color:#e2504e">{{ $message }}</div>@enderror
-  </div>
-
-  {{-- 価格 --}}
-  <div class="mt16">
-    <label class="muted">販売価格</label>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <span>¥</span>
-      <input type="number" name="price" min="0" step="1" value="{{ old('price') }}" required>
-    </div>
-    @error('price')<div class="muted" style="color:#e2504e">{{ $message }}</div>@enderror
-  </div>
-
-  <div class="mt32">
-    <button class="btn btn-block" type="submit">出品する</button>
-  </div>
-</form>
+  </form>
+</div>
 @endsection

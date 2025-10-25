@@ -1,42 +1,31 @@
 @extends('layouts.app')
-
 @section('title','プロフィール設定')
 
 @section('content')
-  <h1 class="section-title" style="text-align:center">プロフィール設定</h1>
-  <div class="container" style="max-width:720px;margin:20px auto 60px;">
-    <form method="POST" action="{{ route('mypage.profile.update') }}" enctype="multipart/form-data">
+  <div class="form-box">
+    <h1 class="form-title">プロフィール設定</h1>
+    <form method="post" action="{{ route('mypage.profile.update') }}" enctype="multipart/form-data">
       @csrf
-      <div class="flex" style="align-items:center">
-        <div style="width:100px;height:100px;border-radius:50%;background:#ddd"></div>
-        <div><label class="btn" style="margin-left:16px;cursor:pointer;">
-          画像を選択する <input type="file" name="avatar" accept=".jpg,.jpeg,.png" style="display:none">
-        </label></div>
+      <div class="profile-avatar">
+        <div class="avatar lg"></div>
+        <label class="gt-btn gt-btn--white ml-12">
+          画像を選択する <input type="file" name="avatar" hidden>
+        </label>
       </div>
 
-      <div class="mt24">
-        <label>ユーザー名</label>
-        <input type="text" name="user_name" value="{{ old('user_name', auth()->user()->name ?? '') }}">
-      </div>
+      <label class="mt-16">ユーザー名</label>
+      <input name="name" value="{{ old('name',auth()->user()->name) }}">
 
-      <div class="mt16">
-        <label>郵便番号</label>
-        <input type="text" name="postal_code" value="{{ old('postal_code', $profile->postal_code ?? '') }}">
-      </div>
+      <label class="mt-12">郵便番号</label>
+      <input name="postal_code" value="{{ old('postal_code',$profile->postal_code) }}">
 
-      <div class="mt16">
-        <label>住所</label>
-        <input type="text" name="address1" value="{{ old('address1', $profile->address_line1 ?? '') }}">
-      </div>
+      <label class="mt-12">住所</label>
+      <input name="address_line1" value="{{ old('address_line1',$profile->address_line1) }}">
 
-      <div class="mt16">
-        <label>建物名</label>
-        <input type="text" name="address2" value="{{ old('address2', $profile->address_line2 ?? '') }}">
-      </div>
+      <label class="mt-12">建物名</label>
+      <input name="address_line2" value="{{ old('address_line2',$profile->address_line2) }}">
 
-      <div class="mt24">
-        <button class="btn btn-block">更新する</button>
-      </div>
+      <button class="gt-btn gt-btn--primary mt-24">更新する</button>
     </form>
   </div>
 @endsection

@@ -1,65 +1,86 @@
 @extends('layouts.app')
+@section('title', $item->name)
 
-@section('title',$item->name)
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/items.css') }}">
+@endpush
 
 @section('content')
-  <div class="flex mt24" style="align-items:flex-start;">
-    {{-- 左：大画像 --}}
-    <div style="flex:0 0 420px">
-      <div class="thumb" style="width:100%;aspect-ratio:1/1;">
-        @if($item->images->first())
-          <img src="{{ asset('storage/'.$item->images->first()->path) }}" alt="{{ $item->name }}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">
-        @else
-          商品画像
-        @endif
-      </div>
-    </div>
-
-    {{-- 右：情報 --}}
-    <div style="flex:1">
-      <h1 style="font-size:28px;font-weight:800;margin:0 0 6px">{{ $item->name }}</h1>
-      <div class="muted mb24">{{ $item->brand ?: 'ブランド名' }}</div>
-      <div style="font-size:26px;font-weight:800;margin-bottom:8px;">¥{{ number_format($item->price) }} <span class="muted" style="font-size:14px;">(税込)</span></div>
-
-      {{-- いいね/コメントアイコン（ダミー・実装時に差替） --}}
-      <div class="muted mb24">⭐ 3　💬 1</div>
-
-      {{-- 購入ボタン --}}
-      <a class="btn btn-block" href="{{ route('purchase.index', $item) }}">購入手続きへ</a>
-
-      <div class="section-title">商品説明</div>
-      <div class="muted">
-        {!! nl2br(e($item->description ?? "新品\n商品の状態は良好です。傷もありません。\n購入後、即発送いたします。")) !!}
-      </div>
-
-      <div class="section-title">商品の情報</div>
-      <div class="mb24">
-        <div>カテゴリ：<span class="badge">{{ $item->category->name ?? '—' }}</span></div>
-        <div class="mt8">商品の状態：<span class="badge">{{ $item->condition->name ?? '—' }}</span></div>
-      </div>
-
-      {{-- コメント --}}
-      <div class="section-title">コメント ({{ $item->comments->count() }})</div>
-      <div class="mb24">
-        @forelse($item->comments as $c)
-          <div class="flex" style="align-items:center;margin-bottom:8px;">
-            <div style="width:36px;height:36px;border-radius:50%;background:#ddd"></div>
-            <div><strong class="muted" style="margin-left:8px;">{{ $c->user->name ?? 'user' }}</strong></div>
-          </div>
-          <div class="muted" style="background:#eee;padding:10px;border-radius:6px;margin-bottom:12px;">{{ $c->body }}</div>
-        @empty
-          <div class="muted">コメントはまだありません。</div>
-        @endforelse
-      </div>
-
-      @auth
-      <div class="section-title">商品へのコメント</div>
-      <form class="mt8" action="{{ route('comments.store', $item) }}" method="POST">
-        @csrf
-        <textarea name="body" placeholder="こちらにコメントが入ります。"></textarea>
-        <div class="mt16"><button class="btn">コメントを送信する</button></div>
-      </form>
-      @endauth
-    </div>
+<div class="detail">
+  <div class="detail__left">
+    <img class="detail__image" src="{{ $item->image }}" alt="{{ $item->name }}">
   </div>
+
+  <div class="detail__right">
+    <h1 class="detail__title">{{ $item->name }}</h1>
+    <div class="detail__brand">{{ $item->brand ?? 'ブランド名' }}</div>
+
+    <div class="detail__price">
+      ¥{{ number_format($item->price) }} <small>（税込）</small>
+    </div>
+
+    {{-- いいね & コメント数 --}}
+    <div class="detail__icons" aria-label="ステータス">
+      @auth
+        <form method="POST" action="{{ route('items.like', $item) }}" style="display:inline;">
+          @csrf
+          <button type="submit" class="icon-like {{ $liked ? 'is-liked' : '' }}" aria-pressed="{{ $liked ? 'true' : 'false' }}">★</button>
+        </form>
+      @else
+        <a href="{{ route('login') }}" class="icon-like">★</a>
+      @endauth
+      <small class="ml-8">{{ $item->likes_count }}</small>
+
+      <span class="ml-16" aria-hidden="true">💬</span>
+      <small class="ml-8">{{ $item->comments_count }}</small>
+    </div>
+
+    {{-- 購入ボタン（赤） --}}
+    <a href="{{ route('purchase.index', $item) }}" class="gt-btn gt-btn--buy mt-16">購入手続きへ</a>
+
+    {{-- 商品説明 --}}
+    <section class="detail__section">
+      <h2>商品説明</h2>
+      <p class="detail__desc">{{ $item->description ?? 'カラー：グレー / 新品 / 即発送' }}</p>
+    </section>
+
+    {{-- 商品の情報 --}}
+    <section class="detail__section">
+      <h2>商品の情報</h2>
+      <div class="chips">
+        <span class="chip">{{ $item->category->name ?? '洋服' }}</span>
+        <span class="chip">{{ $item->condition->name ?? 'メンズ' }}</span>
+      </div>
+      <div class="mt-8">商品の状態：良好</div>
+    </section>
+
+    {{-- コメント一覧 --}}
+    <section class="detail__section">
+      <h2>コメント（{{ $comments->count() }}）</h2>
+
+      @forelse($comments as $c)
+        <div class="comment">
+          <div class="avatar"></div>
+          <div class="comment__meta">
+            <div class="comment__name">{{ $c->user->name ?? 'ゲスト' }}</div>
+          </div>
+        </div>
+        <div class="comment__bubble">{{ $c->body }}</div>
+      @empty
+        <div class="muted mt-8">まだコメントはありません。</div>
+      @endforelse
+
+      {{-- フォームは常に表示。未ログイン時は送信でログイン画面へ遷移（ルートで制御） --}}
+      <form method="post" action="{{ route('items.comments.store', $item) }}" class="mt-16">
+        @csrf
+        <label class="mb-8 d-block">商品へのコメント</label>
+        <textarea name="body" rows="5" maxlength="255" class="w-100" placeholder="こちらにコメントを入力してください" required></textarea>
+        @error('body')
+          <div class="muted mt-8">{{ $message }}</div>
+        @enderror
+        <button type="submit" class="gt-btn gt-btn--comment mt-16">コメントを送信する</button>
+      </form>
+    </section>
+  </div>
+</div>
 @endsection

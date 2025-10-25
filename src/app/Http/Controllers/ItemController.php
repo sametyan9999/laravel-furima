@@ -72,7 +72,10 @@ class ItemController extends Controller
                 ->exists();
         }
 
-        return view('items.show', compact('item', 'liked'));
+        // Blade 用
+        $comments = $item->comments;
+
+        return view('items.show', compact('item', 'liked', 'comments'));
     }
 
     /**
@@ -86,7 +89,6 @@ class ItemController extends Controller
 
     /**
      * 出品登録
-     * バリデーションは表（ExhibitionRequest）に準拠
      */
     public function store(Request $request)
     {
@@ -94,18 +96,16 @@ class ItemController extends Controller
             'name'        => ['required', 'string', 'max:120'],
             'description' => ['required', 'string', 'max:255'],
             'brand'       => ['nullable', 'string', 'max:80'],
-            'image'       => ['nullable', 'url'],         // URLで保存する場合
-            'image_file'  => ['nullable','image','mimes:jpeg,png','max:4096'], // ファイルアップロードにも対応
+            'image'       => ['nullable', 'url'],
+            'image_file'  => ['nullable','image','mimes:jpeg,png','max:4096'],
             'category_id' => ['nullable', 'exists:categories,id'],
             'condition_id'=> ['required', 'integer', 'exists:conditions,id'],
             'price'       => ['required', 'integer', 'min:0'],
         ];
         $data = $request->validate($rules);
 
-        // 画像：URL優先。無ければアップロードを保存
         if (empty($data['image']) && $request->hasFile('image_file')) {
             $path = $request->file('image_file')->store('public/items');
-            // 画面では <img src="{{ $item->image }}"> を想定 → storageの公開URLにするなら以下
             $data['image'] = Storage::url($path);
         }
         if (empty($data['image'])) {
@@ -147,6 +147,7 @@ class ItemController extends Controller
 
     /**
      * コメント送信（US006-FN020）
+     * 仕様に合わせてログイン必須。body 未入力/255超はバリデーション。
      */
     public function storeComment(Request $request, Item $item)
     {
@@ -155,7 +156,7 @@ class ItemController extends Controller
         ]);
 
         Comment::create([
-            'user_id' => Auth::id(),
+            'user_id' => Auth::id(), // 必須
             'item_id' => $item->id,
             'body'    => $validated['body'],
         ]);

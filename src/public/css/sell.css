@@ -1,0 +1,61 @@
+.sell-container {
+    max-width: 840px;
+    margin: 32px auto;
+    padding: 0 20px
+}
+
+.section {
+    margin-top: 28px
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px
+}
+
+.image-uploader {
+    padding: 24px;
+    border: 1px dashed #cfcfcf;
+    border-radius: 8px;
+    background: #fafafa;
+    display: flex;
+    gap: 16px;
+    align-items: center
+}
+
+.category-chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #f09a96;
+    border-radius: 9999px;
+    padding: 6px 10px;
+    cursor: pointer;
+    background: #fff5f5
+}
+
+.chip input {
+    margin-right: 6px
+}
+
+.price .price-input {
+    display: flex;
+    align-items: center;
+    gap: 8px
+}
+
+.price .yen {
+    display: inline-block;
+    padding: 0 10px;
+    height: 44px;
+    line-height: 44px;
+    border: 1px solid #d4d4d4;
+    border-radius: 4px;
+    background: #fafafa
+}

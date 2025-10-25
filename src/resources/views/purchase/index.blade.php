@@ -1,57 +1,51 @@
 @extends('layouts.app')
+@section('title','商品購入')
 
-@section('title','購入確認')
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('css/purchase.css') }}">
+@endpush
 
 @section('content')
-  <div class="flex mt24">
-    <div style="flex:1">
-      {{-- 商品要約 --}}
-      <div class="flex" style="align-items:center;gap:16px;">
-        <div class="thumb" style="width:72px;height:72px">商品画像</div>
-        <div>
-          <div style="font-weight:700">{{ $item->name }}</div>
-          <div class="price">¥{{ number_format($item->price) }}</div>
-        </div>
-      </div>
-
-      <hr class="mt24 mb24">
-
-      {{-- 支払い方法 --}}
-      <div class="mt24">
-        <div class="section-title">支払い方法</div>
-        <form id="purchase-form" method="POST" action="{{ route('purchase.store', $item) }}">
-          @csrf
-          <select name="payment_method" required>
-            <option value="">選択してください</option>
-            <option value="convenience" {{ old('payment_method')==='convenience'?'selected':'' }}>コンビニ払い</option>
-            <option value="card" {{ old('payment_method')==='card'?'selected':'' }}>カード支払い</option>
-          </select>
-
-          {{-- 配送先（スナップショット） --}}
-          <div class="mt32">
-            <div class="section-title">配送先</div>
-            <div class="muted">〒 {{ $address['postal_code'] ?? 'XXX-YYYY' }}</div>
-            <div class="muted">{{ $address['address'] ?? 'ここには住所と建物が入ります' }}</div>
-            <div class="mt8"><a href="{{ url('/purchase/address/'.$item->id) }}">変更する</a></div>
-          </div>
-
-          <div class="mt24">
-            <button class="btn">購入する</button>
-          </div>
-        </form>
+<div class="purchase">
+  <div class="purchase__left">
+    <div class="purchase__item">
+      <img src="{{ $item->image }}" alt="" class="purchase__thumb">
+      <div>
+        <div class="purchase__name">{{ $item->name }}</div>
+        <div class="purchase__price">¥ {{ number_format($item->price) }}</div>
       </div>
     </div>
 
-    {{-- 右：合計 --}}
-    <div style="flex:0 0 340px;margin-left:auto">
-      <div style="border:1px solid #ccc;border-radius:6px;overflow:hidden">
-        <div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #eee">
-          <div>商品代金</div><div>¥{{ number_format($item->price) }}</div>
-        </div>
-        <div style="display:flex;justify-content:space-between;padding:14px 16px;">
-          <div>支払い方法</div><div class="muted">{{ old('payment_method','選択前')==='card'?'カード払い':(old('payment_method')==='convenience'?'コンビニ払い':'—') }}</div>
-        </div>
+    <section class="mt-24">
+      <h2 class="section-title">支払い方法</h2>
+      <select name="payment_method" form="purchaseForm">
+        <option value="">選択してください</option>
+        <option value="convenience">コンビニ払い</option>
+        <option value="card">カード支払い</option>
+      </select>
+    </section>
+
+    <section class="mt-24">
+      <h2 class="section-title">配送先</h2>
+      <div class="address-box">
+        〒 {{ $snapshot['postal'] ?? 'XXX-YYYY' }}<br>
+        ここには住所と建物が入ります
+        <a class="ml-16" href="{{ route('purchase.address',$item) }}">変更する</a>
       </div>
-    </div>
+    </section>
   </div>
+
+  <aside class="purchase__summary">
+    <table class="summary">
+      <tr><th>商品代金</th><td>¥ {{ number_format($item->price) }}</td></tr>
+      <tr><th>支払い方法</th><td id="payLabel">コンビニ払い</td></tr>
+    </table>
+
+    <form id="purchaseForm" class="mt-16" method="post" action="{{ route('purchase.store',$item) }}">
+      @csrf
+      <input type="hidden" name="payment_method" value="convenience">
+      <button class="gt-btn gt-btn--buy w-100">購入する</button>
+    </form>
+  </aside>
+</div>
 @endsection

@@ -1,41 +1,47 @@
 @extends('layouts.app')
+
 @section('title','会員登録')
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+@endpush
+
 @section('content')
-<h1 class="section-title" style="text-align:center;margin-top:36px;">会員登録</h1>
+<div class="container auth-container">
+  <h1 class="page-title">会員登録</h1>
 
-<div class="container" style="max-width:520px;margin:20px auto 60px;">
-  <form method="POST" action="{{ route('register') }}">
+  <form method="POST" action="{{ route('register') }}" class="form">
     @csrf
-
-    <div class="mt16">
-      <label>ユーザー名</label>
-      <input type="text" name="name" value="{{ old('name') }}" required autofocus>
-      @error('name')<div class="muted" style="color:#e2504e">{{ $message }}</div>@enderror
+    <div class="form-group">
+      <label for="name">ユーザー名</label>
+      <input id="name" name="name" type="text" value="{{ old('name') }}" required>
+      @error('name')<p class="error">{{ $message }}</p>@enderror
     </div>
 
-    <div class="mt16">
-      <label>メールアドレス</label>
-      <input type="email" name="email" value="{{ old('email') }}" required>
-      @error('email')<div class="muted" style="color:#e2504e">{{ $message }}</div>@enderror
+    <div class="form-group">
+      <label for="email">メールアドレス</label>
+      <input id="email" name="email" type="email" value="{{ old('email') }}" required>
+      @error('email')<p class="error">{{ $message }}</p>@enderror
     </div>
 
-    <div class="mt16">
-      <label>パスワード</label>
-      <input type="password" name="password" required>
-      @error('password')<div class="muted" style="color:#e2504e">{{ $message }}</div>@enderror
+    <div class="form-group">
+      <label for="password">パスワード</label>
+      <input id="password" name="password" type="password" minlength="8" required>
+      @error('password')<p class="error">{{ $message }}</p>@enderror
     </div>
 
-    <div class="mt16">
-      <label>確認用パスワード</label>
-      <input type="password" name="password_confirmation" required>
+    <div class="form-group">
+      <label for="password_confirmation">確認用パスワード</label>
+      <input id="password_confirmation" name="password_confirmation" type="password" minlength="8" required>
     </div>
 
-    <div class="mt24"><button class="btn btn-block" type="submit">登録する</button></div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary btn-wide">登録する</button>
+    </div>
 
-    <div class="mt16" style="text-align:center;">
+    <p class="help-link">
       <a href="{{ route('login') }}">ログインはこちら</a>
-    </div>
+    </p>
   </form>
 </div>
 @endsection

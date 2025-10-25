@@ -1,46 +1,61 @@
 @extends('layouts.app')
+
 @section('title','プロフィール設定')
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/mypage.css') }}">
+@endpush
+
 @section('content')
-<h1 class="section-title" style="text-align:center;margin-top:28px;">プロフィール設定</h1>
+<div class="container mypage-profile-first">
+  <h1 class="page-title">プロフィール設定</h1>
 
-<div class="container" style="max-width:720px;margin:20px auto 60px;">
-  <form method="POST" action="{{ route('mypage.profile.update') }}" enctype="multipart/form-data">
+  <form method="POST" action="{{ route('mypage.profile.update') }}" class="form" enctype="multipart/form-data">
     @csrf
+    @method('PUT')
 
-    <div class="flex" style="align-items:center">
-      <div style="width:100px;height:100px;border-radius:50%;background:#ddd"></div>
-      <label class="btn" style="margin-left:16px;cursor:pointer;">
+    <div class="avatar-block">
+      <div class="avatar-circle">
+        @if(optional(auth()->user()->profile)->avatar_path)
+          <img src="{{ asset(auth()->user()->profile->avatar_path) }}" alt="avatar">
+        @endif
+      </div>
+      <label class="btn btn-outline">
         画像を選択する
-        <input type="file" name="avatar" accept=".jpg,.jpeg,.png" style="display:none">
+        <input type="file" name="avatar" accept="image/png,image/jpeg" hidden>
       </label>
+      @error('avatar')<p class="error">{{ $message }}</p>@enderror
     </div>
 
-    <div class="mt24">
-      <label>ユーザー名</label>
-      <input type="text" name="user_name" value="{{ old('user_name', auth()->user()->name ?? '') }}" required>
-      @error('user_name')<div class="muted" style="color:#e2504e">{{ $message }}</div>@enderror
+    <div class="form-group">
+      <label for="username">ユーザー名</label>
+      <input id="username" name="username" type="text" value="{{ old('username', auth()->user()->name) }}" required>
+      @error('username')<p class="error">{{ $message }}</p>@enderror
     </div>
 
-    <div class="mt16">
-      <label>郵便番号</label>
-      <input type="text" name="postal_code" value="{{ old('postal_code') }}">
-      @error('postal_code')<div class="muted" style="color:#e2504e">{{ $message }}</div>@enderror
+    <div class="form-group">
+      <label for="postal_code">郵便番号</label>
+      <input id="postal_code" name="postal_code" type="text" inputmode="numeric" placeholder="123-4567"
+             value="{{ old('postal_code', optional(auth()->user()->profile)->postal_code) }}">
+      @error('postal_code')<p class="error">{{ $message }}</p>@enderror
     </div>
 
-    <div class="mt16">
-      <label>住所</label>
-      <input type="text" name="address1" value="{{ old('address1') }}">
-      @error('address1')<div class="muted" style="color:#e2504e">{{ $message }}</div>@enderror
+    <div class="form-group">
+      <label for="address_line1">住所</label>
+      <input id="address_line1" name="address_line1" type="text"
+             value="{{ old('address_line1', optional(auth()->user()->profile)->address_line1) }}">
+      @error('address_line1')<p class="error">{{ $message }}</p>@enderror
     </div>
 
-    <div class="mt16">
-      <label>建物名</label>
-      <input type="text" name="address2" value="{{ old('address2') }}">
+    <div class="form-group">
+      <label for="address_line2">建物名</label>
+      <input id="address_line2" name="address_line2" type="text"
+             value="{{ old('address_line2', optional(auth()->user()->profile)->address_line2) }}">
+      @error('address_line2')<p class="error">{{ $message }}</p>@enderror
     </div>
 
-    <div class="mt24">
-      <button class="btn btn-block">更新する</button>
+    <div class="form-actions">
+      <button class="btn btn-primary btn-wide" type="submit">更新する</button>
     </div>
   </form>
 </div>

@@ -1,0 +1,68 @@
+/* 購入ページのレイアウト */
+.purchase {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 40px;
+    margin-top: 24px;
+}
+
+.purchase__item {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.purchase__thumb {
+    width: 100px;
+    height: 100px;
+    background: #eee;
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+.purchase__name {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.purchase__price {
+    color: #444;
+}
+
+/* 右側サマリー */
+.summary {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.summary th,
+.summary td {
+    padding: 10px;
+    border: 1px solid #eee;
+    text-align: left;
+}
+
+.address-box {
+    padding: 12px;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    background: #fafafa;
+}
+
+/* 見出しとフォーム（このページで使う分だけ） */
+.section-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+select,
+input[type="text"],
+input[type="number"] {
+    width: 100%;
+    height: 40px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 0 10px;
+    background: #fff;
+}

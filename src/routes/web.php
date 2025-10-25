@@ -21,17 +21,18 @@ Route::get('/item/{item}', [ItemController::class, 'show'])->name('items.show');
 /**
  * ==========================
  * Authenticated (要ログイン)
- *   ※メール認証を使うなら 'verified' を group に追加してください
  * ==========================
  */
-Route::middleware(['auth'/*, 'verified'*/])->group(function () {
+Route::middleware(['auth'])->group(function () {
 
     // 出品 PG08
     Route::get('/sell',  [ItemController::class, 'create'])->name('items.create');
     Route::post('/sell', [ItemController::class, 'store'])->name('items.store');
 
-    // いいね／コメント（ItemController に集約）
-    Route::post('/items/{item}/like',     [ItemController::class, 'toggleLike'])->name('items.like');
+    // いいね（US005-FN018）
+    Route::post('/items/{item}/like', [ItemController::class, 'toggleLike'])->name('items.like');
+
+    // コメント送信（US006-FN020）※仕様に合わせログイン必須
     Route::post('/items/{item}/comments', [ItemController::class, 'storeComment'])->name('items.comments.store');
 
     // 購入フロー PG06
@@ -42,14 +43,12 @@ Route::middleware(['auth'/*, 'verified'*/])->group(function () {
     Route::get ('/purchase/address/{item}', [PurchaseController::class, 'editAddress'])->name('purchase.address');
     Route::post('/purchase/address/{item}', [PurchaseController::class, 'updateAddress'])->name('purchase.address.update');
 
-    // マイページ（プロフィール画面：購入/出品タブは ?page=buy|sell） PG09/PG11/PG12
+    // マイページ関連 PG09〜PG12
     Route::get('/mypage', [ProfileController::class, 'index'])->name('mypage.index');
-
-    // プロフィール編集（設定画面） PG10
-    Route::get ('/mypage/profile', [ProfileController::class, 'edit'])->name('mypage.profile.edit');
+    Route::get('/mypage/profile', [ProfileController::class, 'edit'])->name('mypage.profile.edit');
     Route::post('/mypage/profile', [ProfileController::class, 'update'])->name('mypage.profile.update');
 
-    // 初回プロフィール設定（任意：FN006）※使う場合のみ
+    // 初回プロフィール設定（任意）
     Route::get ('/mypage/profile-first',  [ProfileController::class, 'first'])->name('mypage.profile.first');
     Route::post('/mypage/profile-first',  [ProfileController::class, 'storeFirst'])->name('mypage.profile.first.store');
 });
