@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\{Item, Purchase, Profile};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -45,7 +46,7 @@ class ProfileController extends Controller
 
     /**
      * プロフィール更新
-     *  - avatar: jpeg/png
+     *  - avatar: jpeg/png を public ディスクに保存
      *  - username max:20（users.name を更新）
      *  - postal_code サイズ8（123-4567）
      */
@@ -60,10 +61,10 @@ class ProfileController extends Controller
             'address_line2' => ['nullable','string','max:255'],
             'phone'         => ['nullable','string','max:20'],
             'bio'           => ['nullable','string','max:255'],
-            'avatar'        => ['nullable','image','mimes:jpeg,png','max:4096'],
+            'avatar'        => ['nullable','image','mimes:jpeg,png','max:10240'], // 10MB に引き上げ
         ]);
 
-        // ユーザー名（Blade 側の name="username" と一致させる）
+        // ユーザー名
         $user->name = $data['username'];
         $user->save();
 
@@ -75,9 +76,10 @@ class ProfileController extends Controller
         $profile->phone         = $data['phone'] ?? null;
         $profile->bio           = $data['bio'] ?? null;
 
+        // アバター画像を storage/app/public/avatars に保存し、表示用に /storage/avatars/... を持つ
         if ($request->hasFile('avatar')) {
-            $path = $request->file('avatar')->store('public/avatars');
-            $profile->avatar_path = \Storage::url($path);
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $profile->avatar_path = '/storage/'.$path;
         }
 
         $profile->save();

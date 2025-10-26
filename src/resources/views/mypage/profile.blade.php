@@ -19,15 +19,21 @@
       {{-- アバター & 画像選択 --}}
       <div class="avatar-block">
         <div class="avatar-circle">
-          @if(optional(auth()->user()->profile)->avatar_path)
-            <img src="{{ asset(auth()->user()->profile->avatar_path) }}" alt="avatar">
+          @php
+            $avatar = optional(auth()->user()->profile)->avatar_path;
+          @endphp
+          @if($avatar)
+            <img id="avatarPreview" src="{{ asset($avatar) }}" alt="avatar">
+          @else
+            <img id="avatarPreview" src="" alt="" style="display:none;">
           @endif
         </div>
 
-        <label class="btn btn-outline btn-sm">
+        {{-- input は非表示にして JS でクリックを発火 --}}
+        <input id="avatar" type="file" name="avatar" accept="image/jpeg,image/png" style="display:none;">
+        <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('avatar').click();">
           画像を選択する
-          <input type="file" name="avatar" accept="image/jpeg,image/png" hidden>
-        </label>
+        </button>
       </div>
       @error('avatar') <div class="error">{{ $message }}</div> @enderror
 
@@ -68,4 +74,24 @@
       </div>
     </form>
   </div>
+
+  {{-- 画像プレビュー（選択直後に丸の中へ表示） --}}
+  <script>
+    (function () {
+      const input = document.getElementById('avatar');
+      const preview = document.getElementById('avatarPreview');
+      if (!input) return;
+
+      input.addEventListener('change', function () {
+        const file = this.files && this.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      });
+    })();
+  </script>
 @endsection
