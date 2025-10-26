@@ -1,68 +1,190 @@
-/* 購入ページのレイアウト */
+/* ============================
+   購入ページ 全体レイアウト（幅・余白を拡大）
+============================ */
 .purchase {
+    max-width: 1120px;
+    margin: 32px auto;
+    padding: 0 24px;
+
     display: grid;
-    grid-template-columns: 1fr 360px;
-    gap: 40px;
-    margin-top: 24px;
+    grid-template-columns: minmax(0, 1fr) 420px;
+    gap: 48px;
+    align-items: start;
 }
 
+/* ============================
+   商品情報（左カラム）
+============================ */
 .purchase__item {
     display: flex;
-    gap: 12px;
+    gap: 20px;
     align-items: center;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #e9e9e9;
 }
 
 .purchase__thumb {
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
     background: #eee;
-    border-radius: 6px;
+    border-radius: 8px;
     object-fit: cover;
+    flex-shrink: 0;
 }
 
 .purchase__name {
-    font-weight: 600;
-    margin-bottom: 4px;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: #222;
 }
 
 .purchase__price {
     color: #444;
+    font-size: 18px;
 }
 
-/* 右側サマリー */
-.summary {
-    width: 100%;
-    border-collapse: collapse;
+.purchase__section {
+    margin-top: 36px;
 }
 
-.summary th,
-.summary td {
-    padding: 10px;
-    border: 1px solid #eee;
-    text-align: left;
+/* 見出し＋右側アクション（「変更する」） */
+.section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
 }
 
-.address-box {
-    padding: 12px;
-    border: 1px solid #eee;
-    border-radius: 6px;
-    background: #fafafa;
+.section-action {
+    color: #1a73e8;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
 }
 
-/* 見出しとフォーム（このページで使う分だけ） */
+.section-action:hover {
+    text-decoration: underline;
+}
+
 .section-title {
     font-size: 18px;
     font-weight: 700;
-    margin-bottom: 12px;
+    color: #222;
+    margin: 0 0 12px 0;
 }
 
+/* セレクト等 */
 select,
 input[type="text"],
 input[type="number"] {
     width: 100%;
-    height: 40px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    padding: 0 10px;
+    height: 44px;
+    border: 1px solid #cfcfcf;
+    border-radius: 8px;
+    padding: 0 12px;
     background: #fff;
+    font-size: 15px;
+}
+
+/* 配送先ボックス（行ごとに積む） */
+.address-box {
+    padding: 16px 20px;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    background: #fafafa;
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+.address-line {
+    margin: 2px 0;
+}
+
+/* ============================
+   右カラム（サマリー）
+   角は尖らせ・縦線なし・中央の横線のみ
+============================ */
+.purchase__summary {
+    position: sticky;
+    top: 80px;
+}
+
+.summary {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #cfcfcf;
+    /* 外枠だけ */
+    border-radius: 0;
+    background: #fff;
+    margin-bottom: 24px;
+}
+
+.summary th,
+.summary td {
+    padding: 20px 24px;
+    border: 0;
+    /* ← 縦線/セル線を完全に消す */
+    text-align: left;
+    font-size: 16px;
+    font-weight: 700;
+    color: #222;
+    vertical-align: middle;
+}
+
+/* 真ん中の境界線だけを描く（“商品代金”行の下） */
+.summary tr+tr th,
+.summary tr+tr td {
+    border-top: 1px solid #cfcfcf;
+}
+
+/* ============================
+   購入ボタン（参考画像の赤）
+============================ */
+.gt-btn--buy {
+    background-color: #D66558 !important;
+    color: #fff !important;
+    font-weight: 700;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    padding: 16px 0;
+    cursor: pointer;
+    transition: opacity .15s ease;
+    width: 100%;
+}
+
+.gt-btn--buy:hover {
+    opacity: 0.9;
+}
+
+.gt-btn--buy:disabled {
+    background-color: #cfcfcf !important;
+    cursor: not-allowed;
+}
+
+/* ============================
+   ユーティリティ
+============================ */
+.w-100 {
+    width: 100%;
+}
+
+.mt-16 {
+    margin-top: 16px;
+}
+
+/* ============================
+   レスポンシブ
+============================ */
+@media (max-width: 1024px) {
+    .purchase {
+        grid-template-columns: 1fr;
+        gap: 28px;
+    }
+
+    .purchase__summary {
+        position: static;
+    }
 }
