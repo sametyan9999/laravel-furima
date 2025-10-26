@@ -7,29 +7,31 @@
 @endpush
 
 @section('content')
-<div class="container sell-container">
-  <h1 class="page-title">商品の出品</h1>
+<div class="sell-wrapper">
+  <h1 class="sell-title">商品の出品</h1>
 
-  <form method="POST" action="{{ route('items.store') }}" enctype="multipart/form-data" class="form">
+  <form method="POST" action="{{ route('items.store') }}" enctype="multipart/form-data" class="sell-form">
     @csrf
 
-    {{-- 画像アップロード --}}
-    <section class="section">
-      <h2 class="section-title">商品画像</h2>
-      <div class="image-uploader">
-        <label class="btn btn-outline">
+    {{-- 商品画像 --}}
+    <section class="sell-section">
+      <h2 class="sell-label">商品画像</h2>
+      <div class="sell-image-box">
+        <label class="sell-image-label">
           画像を選択する
-          <input type="file" name="image" accept="image/png,image/jpeg" hidden>
+          {{-- ※コントローラ側が image_file を受け取る実装なので name は image_file --}}
+          <input type="file" name="image_file" accept="image/png,image/jpeg" hidden>
         </label>
-        @error('image')<p class="error">{{ $message }}</p>@enderror
       </div>
+      @error('image_file')<p class="error">{{ $message }}</p>@enderror
     </section>
 
-    {{-- 詳細 --}}
-    <section class="section">
-      <h2 class="section-title">商品の詳細</h2>
+    {{-- 商品の詳細 --}}
+    <section class="sell-section">
+      <h2 class="sell-label">商品の詳細</h2>
 
-      {{-- カテゴリー（タグ風） --}}
+      {{-- カテゴリー --}}
+      <div class="sell-subtitle">カテゴリー</div>
       <div class="category-chip-list">
         @foreach($categories as $cat)
           <label class="chip">
@@ -42,19 +44,26 @@
 
       {{-- 状態 --}}
       <div class="form-group mt24">
-        <label for="condition_id">商品の状態</label>
+        <label for="condition_id" class="sell-subtitle">商品の状態</label>
         <select id="condition_id" name="condition_id" required>
-          <option value="" disabled {{ old('condition_id') ? '' : 'selected' }}>選択してください</option>
+          {{-- 初回だけプレースホルダーを表示（選択肢には出さない） --}}
+          @unless(old('condition_id'))
+            <option value="" disabled selected hidden>選択してください</option>
+          @endunless
           @foreach($conditions as $cond)
-            <option value="{{ $cond->id }}" {{ old('condition_id')==$cond->id?'selected':'' }}>{{ $cond->name }}</option>
+            <option value="{{ $cond->id }}" {{ (string)old('condition_id')===(string)$cond->id ? 'selected':'' }}>
+              {{ $cond->name }}
+            </option>
           @endforeach
         </select>
         @error('condition_id')<p class="error">{{ $message }}</p>@enderror
       </div>
     </section>
 
-    {{-- 名前・説明・ブランド・価格 --}}
-    <section class="section">
+    {{-- 商品名・説明など --}}
+    <section class="sell-section">
+      <h2 class="sell-label">商品名と説明</h2>
+
       <div class="form-group">
         <label for="name">商品名</label>
         <input id="name" name="name" type="text" value="{{ old('name') }}" required>
@@ -83,8 +92,9 @@
       </div>
     </section>
 
+    {{-- 出品ボタン --}}
     <div class="form-actions">
-      <button class="btn btn-primary btn-wide" type="submit">出品する</button>
+      <button class="btn-submit" type="submit">出品する</button>
     </div>
   </form>
 </div>

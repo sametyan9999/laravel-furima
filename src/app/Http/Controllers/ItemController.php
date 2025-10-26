@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\{Item, Like, Comment, Category};
+use App\Models\Condition;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -72,7 +73,6 @@ class ItemController extends Controller
                 ->exists();
         }
 
-        // Blade 用
         $comments = $item->comments;
 
         return view('items.show', compact('item', 'liked', 'comments'));
@@ -83,19 +83,15 @@ class ItemController extends Controller
      */
     public function create()
     {
-        $categories = Category::orderBy('sort')->get();
-        return view('items.create', compact('categories'));
+        // 並び順で表示
+        $categories = Category::orderBy('sort')->orderBy('id')->get();
+        $conditions = Condition::orderBy('id')->get();
+
+        return view('items.create', compact('categories', 'conditions'));
     }
 
     /**
      * 出品登録
-     * 表仕様：
-     *  - 商品名 必須
-     *  - 商品説明 必須（最大255）
-     *  - 商品画像 アップロード必須（jpeg/png）
-     *  - カテゴリー 選択必須
-     *  - 状態 必須
-     *  - 価格 必須・0円以上
      */
     public function store(Request $request)
     {
@@ -103,17 +99,17 @@ class ItemController extends Controller
             'name'         => ['required', 'string', 'max:120'],
             'description'  => ['required', 'string', 'max:255'],
             'brand'        => ['nullable', 'string', 'max:80'],
-            // ★ 画像はアップロード必須（URLは不可）
             'image_file'   => ['required','image','mimes:jpeg,png','max:4096'],
-            // ★ カテゴリは必須へ
             'category_id'  => ['required', 'exists:categories,id'],
             'condition_id' => ['required', 'integer', 'exists:conditions,id'],
             'price'        => ['required', 'integer', 'min:0'],
         ];
         $data = $request->validate($rules);
 
-        // 画像保存（storage/app/public/items → /storage/items/***.jpg）
-        $path = $request->file('image_file')->store('public/items');
+        // ✅ 正しい保存先（ディスク: public, パス: items）
+        //    保存: storage/app/public/items/xxxx.jpg
+        //    表示: /storage/items/xxxx.jpg
+        $path = $request->file('image_file')->store('items', 'public');
         $imageUrl = Storage::url($path);
 
         $item = Item::create([
@@ -151,7 +147,6 @@ class ItemController extends Controller
 
     /**
      * コメント送信（US006-FN020）
-     * 仕様に合わせてログイン必須。body 未入力/255超はバリデーション。
      */
     public function storeComment(Request $request, Item $item)
     {
@@ -160,7 +155,7 @@ class ItemController extends Controller
         ]);
 
         Comment::create([
-            'user_id' => Auth::id(), // 必須
+            'user_id' => Auth::id(),
             'item_id' => $item->id,
             'body'    => $validated['body'],
         ]);

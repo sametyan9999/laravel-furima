@@ -18,7 +18,9 @@
     @forelse($items as $item)
       <a href="{{ route('items.show',$item) }}" class="card">
         <div class="card__thumb">
-          <img src="{{ $item->image }}" alt="{{ $item->name }}">
+          @if($item->image_url)
+            <img src="{{ $item->image_url }}" alt="{{ $item->name }}">
+          @endif
         </div>
         <div class="card__name">{{ $item->name }}</div>
       </a>

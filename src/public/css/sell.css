@@ -1,61 +1,215 @@
-.sell-container {
-    max-width: 840px;
-    margin: 32px auto;
-    padding: 0 20px
+/* ==============================
+   共通レイアウト
+============================== */
+.sell-wrapper {
+    max-width: 720px;
+    margin: 40px auto;
+    padding: 0 20px;
 }
 
-.section {
-    margin-top: 28px
+.sell-title {
+    text-align: center;
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 40px;
 }
 
-.section-title {
+/* ==============================
+   各セクション
+============================== */
+.sell-section {
+    margin-bottom: 48px;
+}
+
+.sell-label {
     font-size: 18px;
     font-weight: 700;
-    margin-bottom: 12px
+    margin-bottom: 16px;
+    border-bottom: 1px solid #cfcfcf;
+    padding-bottom: 8px;
 }
 
-.image-uploader {
-    padding: 24px;
+/* ==============================
+   商品画像アップロード
+============================== */
+.sell-image-box {
     border: 1px dashed #cfcfcf;
-    border-radius: 8px;
+    border-radius: 6px;
     background: #fafafa;
+    height: 200px;
     display: flex;
-    gap: 16px;
-    align-items: center
+    justify-content: center;
+    align-items: center;
+}
+
+.sell-image-label {
+    color: #d66558;
+    border: 1px solid #d66558;
+    padding: 10px 18px;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s ease;
+}
+
+.sell-image-label:hover {
+    background: #ffe8e5;
+}
+
+/* ==============================
+   カテゴリー・状態
+============================== */
+.sell-subtitle {
+    font-weight: 700;
+    font-size: 16px;
+    margin: 24px 0 10px;
 }
 
 .category-chip-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px
+    gap: 10px;
 }
 
 .chip {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     border: 1px solid #f09a96;
-    border-radius: 9999px;
-    padding: 6px 10px;
+    border-radius: 999px;
+    padding: 6px 16px;
     cursor: pointer;
-    background: #fff5f5
+    background: #fff;
+    color: #d66558;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s ease;
 }
 
 .chip input {
-    margin-right: 6px
+    display: none;
 }
 
-.price .price-input {
+.chip input:checked+span {
+    background: #d66558;
+    color: #fff;
+    border-radius: 999px;
+    padding: 6px 16px;
+}
+
+.chip:hover {
+    background: #ffe8e5;
+}
+
+/* ==============================
+   テキスト・フォーム
+============================== */
+.form-group {
+    margin-top: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+    width: 100%;
+    border: 1px solid #cfcfcf;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 15px;
+    background: #fff;
+    height: 44px;
+    box-sizing: border-box;
+}
+
+textarea {
+    resize: vertical;
+    height: auto;
+    min-height: 100px;
+}
+
+/* ==============================
+   価格（¥と入力欄を同じ高さに）
+============================== */
+.price-input {
     display: flex;
-    align-items: center;
-    gap: 8px
+    align-items: stretch;
+    width: 100%;
 }
 
-.price .yen {
-    display: inline-block;
-    padding: 0 10px;
+.yen {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: #fff;
+    /* ← 白背景に戻した */
+    border: 1px solid #cfcfcf;
+    border-right: 0;
+    border-radius: 6px 0 0 6px;
+    font-weight: 700;
+    font-size: 16px;
+    color: #444;
+}
+
+#price {
+    flex: 1;
+    border: 1px solid #cfcfcf;
+    border-left: 0;
+    border-radius: 0 6px 6px 0;
     height: 44px;
     line-height: 44px;
-    border: 1px solid #d4d4d4;
-    border-radius: 4px;
-    background: #fafafa
+    padding: 0 12px;
+    font-size: 15px;
+    background: #fff;
+    -moz-appearance: textfield;
+    box-sizing: border-box;
+}
+
+#price::-webkit-outer-spin-button,
+#price::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* ==============================
+   ボタン
+============================== */
+.form-actions {
+    text-align: center;
+    margin-top: 40px;
+}
+
+.btn-submit {
+    background: #d66558;
+    color: #fff;
+    font-weight: 700;
+    font-size: 16px;
+    border: none;
+    border-radius: 6px;
+    padding: 14px 0;
+    width: 100%;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.btn-submit:hover {
+    opacity: 0.9;
+}
+
+/* ==============================
+   エラーメッセージ
+============================== */
+.error {
+    color: #d66558;
+    font-size: 13px;
+    margin-top: 6px;
 }

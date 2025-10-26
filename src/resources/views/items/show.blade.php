@@ -8,7 +8,9 @@
 @section('content')
 <div class="detail">
   <div class="detail__left">
-    <img class="detail__image" src="{{ $item->image }}" alt="{{ $item->name }}">
+    @if($item->image_url)
+      <img class="detail__image" src="{{ $item->image_url }}" alt="{{ $item->name }}">
+    @endif
   </div>
 
   <div class="detail__right">
@@ -19,7 +21,6 @@
       ¥{{ number_format($item->price) }} <small>（税込）</small>
     </div>
 
-    {{-- いいね & コメント数 --}}
     <div class="detail__icons" aria-label="ステータス">
       @auth
         <form method="POST" action="{{ route('items.like', $item) }}" style="display:inline;">
@@ -35,16 +36,13 @@
       <small class="ml-8">{{ $item->comments_count }}</small>
     </div>
 
-    {{-- 購入ボタン（赤） --}}
     <a href="{{ route('purchase.index', $item) }}" class="gt-btn gt-btn--buy mt-16">購入手続きへ</a>
 
-    {{-- 商品説明 --}}
     <section class="detail__section">
       <h2>商品説明</h2>
       <p class="detail__desc">{{ $item->description ?? 'カラー：グレー / 新品 / 即発送' }}</p>
     </section>
 
-    {{-- 商品の情報 --}}
     <section class="detail__section">
       <h2>商品の情報</h2>
       <div class="chips">
@@ -54,7 +52,6 @@
       <div class="mt-8">商品の状態：良好</div>
     </section>
 
-    {{-- コメント一覧 --}}
     <section class="detail__section">
       <h2>コメント（{{ $comments->count() }}）</h2>
 
@@ -70,7 +67,6 @@
         <div class="muted mt-8">まだコメントはありません。</div>
       @endforelse
 
-      {{-- フォームは常に表示。未ログイン時は送信でログイン画面へ遷移（ルートで制御） --}}
       <form method="post" action="{{ route('items.comments.store', $item) }}" class="mt-16">
         @csrf
         <label class="mb-8 d-block">商品へのコメント</label>

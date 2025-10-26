@@ -7,24 +7,21 @@
 
 @section('content')
 <div class="purchase">
-  {{-- ===== 左カラム ===== --}}
   <div class="purchase__left">
-    {{-- 商品情報 --}}
     <div class="purchase__item">
-      <img src="{{ $item->image }}" alt="" class="purchase__thumb">
+      @if($item->image_url)
+        <img src="{{ $item->image_url }}" alt="" class="purchase__thumb">
+      @endif
       <div>
         <div class="purchase__name">{{ $item->name }}</div>
         <div class="purchase__price">¥ {{ number_format($item->price) }}</div>
       </div>
     </div>
 
-    {{-- 支払い方法 --}}
     <section class="purchase__section">
       <div class="section-head">
         <h2 class="section-title">支払い方法</h2>
       </div>
-
-      {{-- ✅ 初期表示は「選択してください」だが、選択肢には含めない --}}
       <select id="paymentSelect" name="payment_method" form="purchaseForm">
         <option value="" disabled selected hidden>選択してください</option>
         <option value="convenience">コンビニ払い</option>
@@ -32,7 +29,6 @@
       </select>
     </section>
 
-    {{-- 配送先 --}}
     <section class="purchase__section">
       <div class="section-head">
         <h2 class="section-title">配送先</h2>
@@ -55,7 +51,6 @@
     </section>
   </div>
 
-  {{-- ===== 右カラム：サマリー ===== --}}
   <aside class="purchase__summary">
     <table class="summary">
       <tr>
@@ -64,7 +59,6 @@
       </tr>
       <tr>
         <th>支払い方法</th>
-        {{-- ✅ 初期表示は「コンビニ払い」 --}}
         <td id="payLabel">コンビニ払い</td>
       </tr>
     </table>
@@ -86,11 +80,9 @@ document.addEventListener('DOMContentLoaded', function () {
   const hidden = document.getElementById('paymentHidden');
   const map    = { convenience: 'コンビニ払い', card: 'カード支払い' };
 
-  // ✅ 初期状態（右上は「コンビニ払い」）
   label.textContent = 'コンビニ払い';
   hidden.value = 'convenience';
 
-  // ✅ 選択変更でサマリーと送信データを同期
   select.addEventListener('change', () => {
     const val = select.value;
     if (map[val]) {
