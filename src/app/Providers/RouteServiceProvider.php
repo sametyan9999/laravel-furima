@@ -17,7 +17,8 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @var string
      */
-    public const HOME = '/home';
+    // ★ ログイン後の遷移先をトップに変更
+    public const HOME = '/';      // 例: マイページにしたいなら '/mypage'
 
     /**
      * The controller namespace for the application.
