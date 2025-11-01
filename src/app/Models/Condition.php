@@ -3,14 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Condition extends Model
 {
-    public $timestamps = false; // id, name のみ
-    protected $fillable = ['name'];
+    use HasFactory;
 
-    public function items()
-    {
-        return $this->hasMany(Item::class, 'condition_id');
-    }
+    // ✅ テーブルに timestamps が無いので自動更新を無効化
+    public $timestamps = false;
+
+    protected $fillable = ['name'];
 }

@@ -1,4 +1,3 @@
-{{-- resources/views/purchase/address.blade.php --}}
 @extends('layouts.app')
 @section('title', '住所の変更')
 
@@ -10,8 +9,11 @@
 <div class="address-page">
   <h1 class="page-title">住所の変更</h1>
 
+  {{-- ✅ method="POST" のままでOK。代わりに @method('PUT') を追加 --}}
   <form method="POST" action="{{ route('purchase.address.update', $item) }}" class="address-form">
     @csrf
+    @method('PUT')  {{-- ← これが無いと419になる --}}
+
     {{-- 郵便番号 --}}
     <div class="form-group">
       <label for="postal_code">郵便番号</label>

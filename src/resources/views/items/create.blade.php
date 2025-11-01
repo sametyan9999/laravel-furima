@@ -18,14 +18,11 @@
       <h2 class="sell-label">商品画像</h2>
 
       <div class="sell-image-box">
-        {{-- プレビュー枠（初期：中央ボタン／選択後：左下ボタン） --}}
         <div class="sell-image-frame" id="image_frame" aria-live="polite">
-          {{-- ★ srcが設定されるまで非表示（CSSでcontrol）／altは空でOK --}}
           <img id="image_preview_img" alt="">
           <label for="image_file" class="sell-image-label" id="image_pick_btn">画像を選択する</label>
         </div>
 
-        {{-- Safari対策：inputは画面外に退避 --}}
         <input
           id="image_file"
           type="file"
@@ -34,7 +31,6 @@
           style="position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden;"
         >
       </div>
-
       @error('image_file')<p class="error">{{ $message }}</p>@enderror
     </section>
 
@@ -42,17 +38,32 @@
     <section class="sell-section">
       <h2 class="sell-label">商品の詳細</h2>
 
-      {{-- カテゴリー（単一選択） --}}
+      {{-- 🔥 カテゴリー（複数選択対応） --}}
       <div class="sell-subtitle">カテゴリー</div>
       <div class="category-chip-list">
+        @php
+          // old()で再表示時にチェック状態を保持
+          $oldCats = collect(old('category_ids', []))->map(fn($v)=>(int)$v)->all();
+        @endphp
+
         @foreach($categories as $cat)
           <label class="chip">
-            <input type="radio" name="category_id" value="{{ $cat->id }}" {{ old('category_id')==$cat->id?'checked':'' }}>
+            <input type="checkbox"
+                   name="category_ids[]"
+                   value="{{ $cat->id }}"
+                   {{ in_array($cat->id, $oldCats, true) ? 'checked' : '' }}>
             <span>{{ $cat->name }}</span>
           </label>
         @endforeach
       </div>
-      @error('category_id')<p class="error">{{ $message }}</p>@enderror
+
+      {{-- バリデーションメッセージ --}}
+      @error('category_ids')
+        <p class="error">{{ $message }}</p>
+      @enderror
+      @error('category_ids.*')
+        <p class="error">{{ $message }}</p>
+      @enderror
 
       {{-- 状態 --}}
       <div class="form-group mt24">
@@ -110,7 +121,7 @@
   </form>
 </div>
 
-{{-- プレビュー制御：画像の有無でボタン位置を切り替え --}}
+{{-- プレビュー制御スクリプト --}}
 <script>
   (function () {
     const input = document.getElementById('image_file');
@@ -127,7 +138,7 @@
     input.addEventListener('change', () => {
       const file = input.files && input.files[0];
       if (!file) {
-        img.removeAttribute('src');  // ★ src消去でCSSが自動的に非表示
+        img.removeAttribute('src');
         applyState();
         return;
       }
@@ -135,7 +146,6 @@
       applyState();
     });
 
-    // 初期状態（old入力で戻ってきた時などに備える）
     applyState();
   })();
 </script>

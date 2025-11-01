@@ -5,39 +5,44 @@ namespace App\Http\Controllers;
 use App\Models\{Item, Purchase, Profile};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
     /**
-     * プロフィール画面（PG09）
-     * /mypage?page=buy|sell でタブ切替（PG11/PG12）
+     * マイページ（PG09/PG11/PG12）
+     * /mypage?view=buy|sell でタブ切替（デフォルト：sell）
      */
     public function index(Request $request)
     {
         $user = Auth::user();
-        $page = $request->get('page'); // buy | sell | null
+
+        // ← ここを互換APIに変更
+        $view = (string) ($request->query('view')); // 'buy' | 'sell' | null
 
         $profile = $user->profile;
         $bought  = null;
         $sold    = null;
 
-        if ($page === 'buy') {
-            $bought = Purchase::with('item')->where('buyer_user_id', $user->id)
-                ->latest('purchased_at')->get();
-        } elseif ($page === 'sell') {
-            $sold = $user->items()->latest()->get();
+        if ($view === 'buy') {
+            // 購入履歴（PG11）
+            $bought = Purchase::with('item')
+                ->where('buyer_user_id', $user->id)
+                ->latest('purchased_at')
+                ->paginate(12)
+                ->withQueryString();
         } else {
-            // デフォルトは出品した商品
-            $sold = $user->items()->latest()->get();
+            // 出品一覧（PG12, 既定）
+            $sold = $user->items()
+                ->latest()
+                ->paginate(12)
+                ->withQueryString();
+            $view = 'sell';
         }
 
-        return view('mypage.index', compact('user','profile','bought','sold','page'));
+        return view('mypage.index', compact('user', 'profile', 'bought', 'sold', 'view'));
     }
 
-    /**
-     * プロフィール編集（PG10）
-     */
+    /** プロフィール編集（PG10） */
     public function edit()
     {
         $profile = Auth::user()->profile;
@@ -45,10 +50,10 @@ class ProfileController extends Controller
     }
 
     /**
-     * プロフィール更新
-     *  - avatar: jpeg/png を public ディスクに保存
-     *  - username max:20（users.name を更新）
-     *  - postal_code サイズ8（123-4567）
+     * プロフィール更新（PG10）
+     * - avatar: jpeg/png を public ディスクに保存（/storage/avatars/...）
+     * - username max:20（users.name）
+     * - postal_code サイズ8（123-4567）
      */
     public function update(Request $request)
     {
@@ -61,7 +66,7 @@ class ProfileController extends Controller
             'address_line2' => ['nullable','string','max:255'],
             'phone'         => ['nullable','string','max:20'],
             'bio'           => ['nullable','string','max:255'],
-            'avatar'        => ['nullable','image','mimes:jpeg,png','max:10240'], // 10MB に引き上げ
+            'avatar'        => ['nullable','image','mimes:jpeg,png','max:10240'],
         ]);
 
         // ユーザー名
@@ -76,10 +81,10 @@ class ProfileController extends Controller
         $profile->phone         = $data['phone'] ?? null;
         $profile->bio           = $data['bio'] ?? null;
 
-        // アバター画像を storage/app/public/avatars に保存し、表示用に /storage/avatars/... を持つ
+        // アバター保存（storage:link 前提）
         if ($request->hasFile('avatar')) {
             $path = $request->file('avatar')->store('avatars', 'public');
-            $profile->avatar_path = '/storage/'.$path;
+            $profile->avatar_path = '/storage/' . $path;
         }
 
         $profile->save();
@@ -87,9 +92,7 @@ class ProfileController extends Controller
         return redirect()->route('mypage.index')->with('status', 'プロフィールを更新しました');
     }
 
-    /**
-     * 初回プロフィール設定（任意：FN006）
-     */
+    /** 初回プロフィール設定（任意：FN006） */
     public function first()
     {
         $profile = Auth::user()->profile;
@@ -98,7 +101,6 @@ class ProfileController extends Controller
 
     public function storeFirst(Request $request)
     {
-        // 最低限：郵便番号と住所だけ
         $data = $request->validate([
             'postal_code'   => ['required','string','size:8','regex:/^\d{3}-\d{4}$/'],
             'address_line1' => ['required','string','max:255'],

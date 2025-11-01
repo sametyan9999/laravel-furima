@@ -38,20 +38,44 @@
 
     <a href="{{ route('purchase.index', $item) }}" class="gt-btn gt-btn--buy mt-16">購入手続きへ</a>
 
+    {{-- ======================== --}}
+    {{-- 商品説明 --}}
+    {{-- ======================== --}}
     <section class="detail__section">
       <h2>商品説明</h2>
       <p class="detail__desc">{{ $item->description ?? 'カラー：グレー / 新品 / 即発送' }}</p>
     </section>
 
+    {{-- ======================== --}}
+    {{-- 商品の情報（カテゴリ・状態） --}}
+    {{-- ======================== --}}
     <section class="detail__section">
       <h2>商品の情報</h2>
-      <div class="chips">
-        <span class="chip">{{ $item->category->name ?? '洋服' }}</span>
-        <span class="chip">{{ $item->condition->name ?? 'メンズ' }}</span>
+
+      {{-- カテゴリー：チップ表示 --}}
+      <div class="detail-kv">
+        <div class="detail-kv__label">カテゴリー</div>
+        <div class="detail-kv__value">
+          <div class="chips">
+            @forelse($item->categories as $cat)
+              <span class="chip">{{ $cat->name }}</span>
+            @empty
+              <span class="chip">{{ $item->category->name ?? 'カテゴリ未設定' }}</span>
+            @endforelse
+          </div>
+        </div>
       </div>
-      <div class="mt-8">商品の状態：良好</div>
+
+      {{-- 商品の状態：文字のみ --}}
+      <div class="detail-kv">
+        <div class="detail-kv__label">商品の状態</div>
+        <div class="detail-kv__value">{{ $item->condition->name ?? '状態未設定' }}</div>
+      </div>
     </section>
 
+    {{-- ======================== --}}
+    {{-- コメントセクション --}}
+    {{-- ======================== --}}
     <section class="detail__section">
       <h2>コメント（{{ $comments->count() }}）</h2>
 
