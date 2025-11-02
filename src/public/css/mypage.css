@@ -207,3 +207,35 @@
 .grid--mypage {
     margin-top: 24px;
 }
+
+/* ===== マイページのSoldバッジ（中央に大きく） ===== */
+.card__thumb {
+    position: relative;
+    overflow: hidden;
+}
+
+.badge-sold {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-20deg);
+    background: rgba(255, 0, 0, 0.85);
+    /* 赤系背景 */
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 800;
+    padding: .45em 1.2em;
+    border-radius: .5em;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    pointer-events: none;
+    z-index: 2;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .35);
+    text-shadow: 1px 2px 6px rgba(0, 0, 0, .35);
+}
+
+/* 無効カード用（関連欠損時など） */
+.card.is-disabled {
+    pointer-events: none;
+    opacity: .6;
+}

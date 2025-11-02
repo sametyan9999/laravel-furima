@@ -7,10 +7,21 @@
 
 @section('content')
 <div class="purchase">
+  {{-- エラー全体表示 --}}
+  @if ($errors->any())
+    <div class="gt-alert gt-alert--danger mb-16">
+      <ul class="m-0 pl-16">
+        @foreach ($errors->all() as $message)
+          <li>{{ $message }}</li>
+        @endforeach
+      </ul>
+    </div>
+  @endif
+
   <div class="purchase__left">
     <div class="purchase__item">
-      @if($item->image_url)
-        <img src="{{ $item->image_url }}" alt="" class="purchase__thumb">
+      @if($item->image) {{-- ← image_url から修正 --}}
+        <img src="{{ $item->image }}" alt="" class="purchase__thumb">
       @endif
       <div>
         <div class="purchase__name">{{ $item->name }}</div>
@@ -18,17 +29,26 @@
       </div>
     </div>
 
+    {{-- 支払い方法 --}}
     <section class="purchase__section">
       <div class="section-head">
         <h2 class="section-title">支払い方法</h2>
       </div>
-      <select id="paymentSelect" name="payment_method" form="purchaseForm">
-        <option value="" disabled selected hidden>選択してください</option>
-        <option value="convenience">コンビニ払い</option>
-        <option value="card">カード支払い</option>
+      {{-- フォーム属性で右側フォームに紐付け --}}
+      <select id="paymentSelect"
+              name="payment_method"
+              form="purchaseForm"
+              required>
+        {{-- デフォルトをコンビニ払いに --}}
+        <option value="convenience" {{ old('payment_method','convenience')==='convenience' ? 'selected' : '' }}>コンビニ払い</option>
+        <option value="card" {{ old('payment_method')==='card' ? 'selected' : '' }}>カード支払い</option>
       </select>
+      @error('payment_method')
+        <div class="text-danger small mt-4">{{ $message }}</div>
+      @enderror
     </section>
 
+    {{-- 配送先 --}}
     <section class="purchase__section">
       <div class="section-head">
         <h2 class="section-title">配送先</h2>
@@ -48,6 +68,9 @@
           @endif
         </div>
       </div>
+      @error('address')
+        <div class="text-danger small mt-4">{{ $message }}</div>
+      @enderror
     </section>
   </div>
 
@@ -59,15 +82,19 @@
       </tr>
       <tr>
         <th>支払い方法</th>
-        <td id="payLabel">コンビニ払い</td>
+        <td id="payLabel">
+          {{ old('payment_method','convenience')==='card' ? 'カード支払い' : 'コンビニ払い' }}
+        </td>
       </tr>
     </table>
 
-    <form id="purchaseForm" class="mt-16" method="post" action="{{ route('purchase.store',$item) }}">
+    <form id="purchaseForm" class="mt-16" method="POST" action="{{ route('purchase.store',$item) }}">
       @csrf
-      <input id="paymentHidden" type="hidden" name="payment_method" value="convenience">
-      <button class="gt-btn gt-btn--buy w-100">購入する</button>
+      <button type="submit" class="gt-btn gt-btn--buy w-100">購入する</button>
     </form>
+    @error('purchase')
+      <div class="text-danger small mt-4">{{ $message }}</div>
+    @enderror
   </aside>
 </div>
 @endsection
@@ -77,18 +104,14 @@
 document.addEventListener('DOMContentLoaded', function () {
   const select = document.getElementById('paymentSelect');
   const label  = document.getElementById('payLabel');
-  const hidden = document.getElementById('paymentHidden');
   const map    = { convenience: 'コンビニ払い', card: 'カード支払い' };
 
-  label.textContent = 'コンビニ払い';
-  hidden.value = 'convenience';
+  // 初期表示を現在の選択に合わせる
+  label.textContent = map[select.value] || 'コンビニ払い';
 
+  // 選択変更時に表示を同期
   select.addEventListener('change', () => {
-    const val = select.value;
-    if (map[val]) {
-      label.textContent = map[val];
-      hidden.value = val;
-    }
+    label.textContent = map[select.value] || '';
   });
 });
 </script>

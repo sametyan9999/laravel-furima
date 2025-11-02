@@ -26,7 +26,9 @@ class ItemController extends Controller
 
         // ---- マイリストタブ（互換表示） ----
         if ($tab === 'mylist' && Auth::check()) {
-            $items = Auth::user()->likedItems()->getQuery()
+            $items = Auth::user()
+                ->likedItems()                 // ← getQuery() を使わない
+                ->select('items.*')            // ← 必ず items.* を選択
                 ->when($keyword, function ($q, $kw) {
                     $q->where(function ($qq) use ($kw) {
                         $qq->where('items.name', 'like', "%{$kw}%")
@@ -72,7 +74,9 @@ class ItemController extends Controller
         $keyword  = (string) $request->query('q', session('q'));
         $category = (int) $request->query('category');
 
-        $items = auth()->user()->likedItems()->getQuery()
+        $items = auth()->user()
+            ->likedItems()                 // ← getQuery() を使わない
+            ->select('items.*')            // ← 必ず items.* を選択
             ->when($keyword, function ($q, $kw) {
                 $q->where(function ($qq) use ($kw) {
                     $qq->where('items.name', 'like', "%{$kw}%")

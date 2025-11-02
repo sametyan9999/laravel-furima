@@ -23,27 +23,36 @@
 </div>
 
 <div class="container mt-24">
-  {{-- タブ切替（出品した商品 / 購入した商品） --}}
-  @php $page = $page ?? null; @endphp
+  {{-- ✅ タブは view パラメータで切替 --}}
+  @php $view = $view ?? 'sell'; @endphp
   <div class="tab">
-    <a class="tab__link {{ $page !== 'buy' ? 'is-active' : '' }}"
-       href="{{ route('mypage.index') }}">出品した商品</a>
-    <a class="tab__link {{ $page === 'buy' ? 'is-active' : '' }}"
-       href="{{ route('mypage.index', ['page'=>'buy']) }}">購入した商品</a>
+    <a class="tab__link {{ $view === 'sell' ? 'is-active' : '' }}"
+       href="{{ route('mypage.index', ['view'=>'sell']) }}">出品した商品</a>
+    <a class="tab__link {{ $view === 'buy' ? 'is-active' : '' }}"
+       href="{{ route('mypage.index', ['view'=>'buy']) }}">購入した商品</a>
   </div>
 
   {{-- 一覧：カードグリッド表示 --}}
-  @if($page === 'buy')
+  @if($view === 'buy')
     @if($bought && $bought->count())
       <div class="grid grid--mypage">
         @foreach($bought as $p)
-          <a href="{{ route('items.show', $p->item) }}" class="card">
-            <div class="card__thumb">
-              <img src="{{ $p->item->image }}" alt="{{ $p->item->name }}">
-            </div>
-            <div class="card__name">{{ $p->item->name }}</div>
-          </a>
+          @php $it = $p->item; @endphp
+          @if($it)
+            <a href="{{ route('items.show', $it) }}" class="card">
+              <div class="card__thumb">
+                <img src="{{ $it->image_url ?? $it->image }}" alt="{{ $it->name }}">
+                {{-- 購入済みは常に Sold 表示 --}}
+                <span class="badge-sold">Sold</span>
+              </div>
+              <div class="card__name">{{ $it->name }}</div>
+            </a>
+          @endif
         @endforeach
+      </div>
+
+      <div class="mt-16">
+        {{ $bought->links() }}
       </div>
     @else
       <p class="mt-24 muted">購入した商品はありません。</p>
@@ -54,11 +63,18 @@
         @foreach($sold as $it)
           <a href="{{ route('items.show', $it) }}" class="card">
             <div class="card__thumb">
-              <img src="{{ $it->image }}" alt="{{ $it->name }}">
+              <img src="{{ $it->image_url ?? $it->image }}" alt="{{ $it->name }}">
+              @if(($it->status ?? null) === 'sold')
+                <span class="badge-sold">Sold</span>
+              @endif
             </div>
             <div class="card__name">{{ $it->name }}</div>
           </a>
         @endforeach
+      </div>
+
+      <div class="mt-16">
+        {{ $sold->links() }}
       </div>
     @else
       <p class="mt-24 muted">出品した商品はありません。</p>

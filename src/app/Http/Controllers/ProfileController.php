@@ -16,23 +16,23 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
 
-        // ← ここを互換APIに変更
-        $view = (string) ($request->query('view')); // 'buy' | 'sell' | null
+        // タブ判定（sell を既定に）
+        $view = (string) $request->query('view', 'sell'); // 'buy' | 'sell'
 
         $profile = $user->profile;
         $bought  = null;
         $sold    = null;
 
         if ($view === 'buy') {
-            // 購入履歴（PG11）
+            // ✅ purchases.user_id（購入者）で検索
             $bought = Purchase::with('item')
-                ->where('buyer_user_id', $user->id)
+                ->where('user_id', $user->id)
                 ->latest('purchased_at')
                 ->paginate(12)
                 ->withQueryString();
         } else {
-            // 出品一覧（PG12, 既定）
-            $sold = $user->items()
+            // 出品一覧
+            $sold = Item::where('user_id', $user->id)
                 ->latest()
                 ->paginate(12)
                 ->withQueryString();
@@ -51,9 +51,6 @@ class ProfileController extends Controller
 
     /**
      * プロフィール更新（PG10）
-     * - avatar: jpeg/png を public ディスクに保存（/storage/avatars/...）
-     * - username max:20（users.name）
-     * - postal_code サイズ8（123-4567）
      */
     public function update(Request $request)
     {
@@ -81,7 +78,6 @@ class ProfileController extends Controller
         $profile->phone         = $data['phone'] ?? null;
         $profile->bio           = $data['bio'] ?? null;
 
-        // アバター保存（storage:link 前提）
         if ($request->hasFile('avatar')) {
             $path = $request->file('avatar')->store('avatars', 'public');
             $profile->avatar_path = '/storage/' . $path;
@@ -92,7 +88,7 @@ class ProfileController extends Controller
         return redirect()->route('mypage.index')->with('status', 'プロフィールを更新しました');
     }
 
-    /** 初回プロフィール設定（任意：FN006） */
+    /** 初回プロフィール設定（任意） */
     public function first()
     {
         $profile = Auth::user()->profile;

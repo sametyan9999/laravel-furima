@@ -2,7 +2,7 @@
 @section('title', '商品一覧')
 
 @push('styles')
-  <link rel="stylesheet" href="{{ asset('css/items.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/items.css') }}?v={{ filemtime(public_path('css/items.css')) }}">
 @endpush
 
 @section('content')
@@ -16,7 +16,7 @@
 
   <div class="grid">
     @forelse($items as $item)
-      {{-- ✅ 自分の出品は非表示 --}}
+      {{-- ✅ 自分の出品は一覧に表示しない --}}
       @if($item->user_id !== auth()->id())
         <a href="{{ route('items.show', $item) }}" class="card">
           <div class="card__thumb">
@@ -24,8 +24,8 @@
               <img src="{{ $item->image_url }}" alt="{{ $item->name }}">
             @endif
 
-            {{-- ✅ 購入済み商品には「Sold」バッジを表示 --}}
-            @if($item->is_sold ?? false)
+            {{-- ✅ 購入済み（sold）ならバッジ表示 --}}
+            @if(($item->status ?? null) === 'sold')
               <span class="card__badge">Sold</span>
             @endif
           </div>

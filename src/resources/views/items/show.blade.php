@@ -2,15 +2,21 @@
 @section('title', $item->name)
 
 @push('styles')
-  <link rel="stylesheet" href="{{ asset('css/items.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/items.css') }}?v={{ filemtime(public_path('css/items.css')) }}">
 @endpush
 
 @section('content')
 <div class="detail">
   <div class="detail__left">
-    @if($item->image_url)
-      <img class="detail__image" src="{{ $item->image_url }}" alt="{{ $item->name }}">
-    @endif
+    <div class="detail__image-wrap">
+      @if($item->image_url)
+        <img class="detail__image" src="{{ $item->image_url }}" alt="{{ $item->name }}">
+      @endif
+      {{-- ✅ 詳細でも sold を表示 --}}
+      @if(($item->status ?? null) === 'sold')
+        <span class="card__badge" aria-label="売り切れ">Sold</span>
+      @endif
+    </div>
   </div>
 
   <div class="detail__right">
@@ -25,7 +31,8 @@
       @auth
         <form method="POST" action="{{ route('items.like', $item) }}" style="display:inline;">
           @csrf
-          <button type="submit" class="icon-like {{ $liked ? 'is-liked' : '' }}" aria-pressed="{{ $liked ? 'true' : 'false' }}">★</button>
+          <button type="submit" class="icon-like {{ $liked ? 'is-liked' : '' }}"
+                  aria-pressed="{{ $liked ? 'true' : 'false' }}">★</button>
         </form>
       @else
         <a href="{{ route('login') }}" class="icon-like">★</a>
@@ -36,23 +43,20 @@
       <small class="ml-8">{{ $item->comments_count }}</small>
     </div>
 
-    <a href="{{ route('purchase.index', $item) }}" class="gt-btn gt-btn--buy mt-16">購入手続きへ</a>
+    {{-- ✅ sold のときは購入不可 --}}
+    @if(($item->status ?? null) === 'sold')
+      <button class="gt-btn gt-btn--buy mt-16" disabled>売り切れ</button>
+    @else
+      <a href="{{ route('purchase.index', $item) }}" class="gt-btn gt-btn--buy mt-16">購入手続きへ</a>
+    @endif
 
-    {{-- ======================== --}}
-    {{-- 商品説明 --}}
-    {{-- ======================== --}}
     <section class="detail__section">
       <h2>商品説明</h2>
       <p class="detail__desc">{{ $item->description ?? 'カラー：グレー / 新品 / 即発送' }}</p>
     </section>
 
-    {{-- ======================== --}}
-    {{-- 商品の情報（カテゴリ・状態） --}}
-    {{-- ======================== --}}
     <section class="detail__section">
       <h2>商品の情報</h2>
-
-      {{-- カテゴリー：チップ表示 --}}
       <div class="detail-kv">
         <div class="detail-kv__label">カテゴリー</div>
         <div class="detail-kv__value">
@@ -65,20 +69,14 @@
           </div>
         </div>
       </div>
-
-      {{-- 商品の状態：文字のみ --}}
       <div class="detail-kv">
         <div class="detail-kv__label">商品の状態</div>
         <div class="detail-kv__value">{{ $item->condition->name ?? '状態未設定' }}</div>
       </div>
     </section>
 
-    {{-- ======================== --}}
-    {{-- コメントセクション --}}
-    {{-- ======================== --}}
     <section class="detail__section">
       <h2>コメント（{{ $comments->count() }}）</h2>
-
       @forelse($comments as $c)
         <div class="comment">
           <div class="avatar"></div>
@@ -94,7 +92,8 @@
       <form method="post" action="{{ route('items.comments.store', $item) }}" class="mt-16">
         @csrf
         <label class="mb-8 d-block">商品へのコメント</label>
-        <textarea name="body" rows="5" maxlength="255" class="w-100" placeholder="こちらにコメントを入力してください" required></textarea>
+        <textarea name="body" rows="5" maxlength="255" class="w-100"
+                  placeholder="こちらにコメントを入力してください" required></textarea>
         @error('body')
           <div class="muted mt-8">{{ $message }}</div>
         @enderror
