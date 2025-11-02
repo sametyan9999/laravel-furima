@@ -13,13 +13,26 @@ use Illuminate\Support\Facades\Log;
 class PurchaseController extends Controller
 {
     /** 購入画面（PG06） */
-    public function index(Item $item)
+    public function index(Request $request, Item $item)
     {
         abort_if($item->status !== 'on_sale', 404);
         abort_if($item->user_id === Auth::id(), 403, '自分の商品は購入できません');
 
         $profile = Auth::user()->profile;
-        return view('purchase.index', compact('item', 'profile'));
+
+        // ✅ ノンJS/テスト環境でも反映されるように、クエリで初期選択を受け取りサーバ側で描画
+        $allowed         = ['convenience', 'card'];
+        $initialPayment  = in_array($request->query('payment_method'), $allowed, true)
+            ? $request->query('payment_method')
+            : 'convenience';
+        $paymentLabel    = $initialPayment === 'card' ? 'カード支払い' : 'コンビニ払い';
+
+        return view('purchase.index', [
+            'item'           => $item,
+            'profile'        => $profile,
+            'initialPayment' => $initialPayment,
+            'paymentLabel'   => $paymentLabel,
+        ]);
     }
 
     /** 住所変更画面（PG07） */
@@ -88,6 +101,7 @@ class PurchaseController extends Controller
             return back()->withErrors(['purchase' => '購入手続きに失敗しました。再度お試しください。'])->withInput();
         }
 
-        return redirect()->route('items.show', $item)->with('status', '購入が完了しました');
+        // 要件：「購入する」押下後は商品一覧へ
+        return redirect()->route('items.index')->with('status', '購入が完了しました');
     }
 }

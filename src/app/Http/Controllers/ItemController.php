@@ -10,25 +10,40 @@ use Illuminate\Support\Facades\DB;
 
 class ItemController extends Controller
 {
+    public function __construct()
+    {
+        // マイリストや投稿系はログイン必須
+        $this->middleware('auth')->only([
+            'mylist', 'create', 'store', 'toggleLike', 'storeComment'
+        ]);
+    }
+
     /** トップ（商品一覧：PG01/PG02） */
     public function index(Request $request)
     {
-        // ---- 検索キーワードを q に統一（keyword 互換維持）----
-        if ($request->filled('q')) {
-            session(['q' => $request->query('q')]);
+        // --- 検索キーワード保持の制御 ---
+        if ($request->boolean('reset')) {
+            session()->forget('q');              // ロゴから来たら q をクリア
+        } elseif ($request->filled('q')) {
+            session(['q' => $request->query('q')]);          // ?q=...
         } elseif ($request->filled('keyword')) {
-            session(['q' => $request->query('keyword')]);
+            session(['q' => $request->query('keyword')]);    // 互換
         }
         $keyword  = session('q');
 
         $tab      = (string) ($request->query('tab', 'recommend')); // 'recommend' | 'mylist'
         $category = (int) ($request->query('category'));            // カテゴリID（任意）
 
-        // ---- マイリストタブ（互換表示） ----
+        // ✅ 未ログインで ?tab=mylist に来たら /login へ（テスト要件）
+        if ($tab === 'mylist' && !Auth::check()) {
+            return redirect('/login');
+        }
+
+        // ---- マイリストタブ（ログイン時） ----
         if ($tab === 'mylist' && Auth::check()) {
             $items = Auth::user()
-                ->likedItems()                 // ← getQuery() を使わない
-                ->select('items.*')            // ← 必ず items.* を選択
+                ->likedItems()
+                ->select('items.*')
                 ->when($keyword, function ($q, $kw) {
                     $q->where(function ($qq) use ($kw) {
                         $qq->where('items.name', 'like', "%{$kw}%")
@@ -75,8 +90,8 @@ class ItemController extends Controller
         $category = (int) $request->query('category');
 
         $items = auth()->user()
-            ->likedItems()                 // ← getQuery() を使わない
-            ->select('items.*')            // ← 必ず items.* を選択
+            ->likedItems()
+            ->select('items.*')
             ->when($keyword, function ($q, $kw) {
                 $q->where(function ($qq) use ($kw) {
                     $qq->where('items.name', 'like', "%{$kw}%")

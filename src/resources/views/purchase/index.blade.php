@@ -20,7 +20,7 @@
 
   <div class="purchase__left">
     <div class="purchase__item">
-      @if($item->image) {{-- ← image_url から修正 --}}
+      @if($item->image)
         <img src="{{ $item->image }}" alt="" class="purchase__thumb">
       @endif
       <div>
@@ -34,14 +34,12 @@
       <div class="section-head">
         <h2 class="section-title">支払い方法</h2>
       </div>
-      {{-- フォーム属性で右側フォームに紐付け --}}
       <select id="paymentSelect"
               name="payment_method"
               form="purchaseForm"
               required>
-        {{-- デフォルトをコンビニ払いに --}}
-        <option value="convenience" {{ old('payment_method','convenience')==='convenience' ? 'selected' : '' }}>コンビニ払い</option>
-        <option value="card" {{ old('payment_method')==='card' ? 'selected' : '' }}>カード支払い</option>
+        <option value="convenience" {{ ($initialPayment ?? 'convenience')==='convenience' ? 'selected' : '' }}>コンビニ払い</option>
+        <option value="card"        {{ ($initialPayment ?? 'convenience')==='card' ? 'selected' : '' }}>カード支払い</option>
       </select>
       @error('payment_method')
         <div class="text-danger small mt-4">{{ $message }}</div>
@@ -82,9 +80,7 @@
       </tr>
       <tr>
         <th>支払い方法</th>
-        <td id="payLabel">
-          {{ old('payment_method','convenience')==='card' ? 'カード支払い' : 'コンビニ払い' }}
-        </td>
+        <td id="payLabel">{{ $paymentLabel ?? 'コンビニ払い' }}</td>
       </tr>
     </table>
 
@@ -105,14 +101,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const select = document.getElementById('paymentSelect');
   const label  = document.getElementById('payLabel');
   const map    = { convenience: 'コンビニ払い', card: 'カード支払い' };
-
-  // 初期表示を現在の選択に合わせる
   label.textContent = map[select.value] || 'コンビニ払い';
-
-  // 選択変更時に表示を同期
-  select.addEventListener('change', () => {
-    label.textContent = map[select.value] || '';
-  });
+  select.addEventListener('change', () => { label.textContent = map[select.value] || ''; });
 });
 </script>
 @endpush

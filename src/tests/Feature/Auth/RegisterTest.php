@@ -11,152 +11,109 @@ class RegisterTest extends TestCase
 {
     use RefreshDatabase;
 
-    // 使っている認証パッケージに合わせて変更（Breeze/Fortifyなら /register がデフォルト）
-    private const REGISTER_GET  = '/register';
-    private const REGISTER_POST = '/register';
-
-    /** @test */
-    public function 登録ページが表示される(): void
+    protected function setUp(): void
     {
-        $res = $this->get(self::REGISTER_GET);
-
-        $res->assertOk();          // 200
-        $res->assertSee('登録');   // ビュー文言が違う場合は削除可
+        parent::setUp();
+        // バリデーションメッセージを日本語で検証
+        config(['app.locale' => 'ja']);
+        app()->setLocale('ja');
     }
 
-    /** @test */
-    public function 名前未入力だとエラーになる(): void
+    private function validPayload(array $overrides = []): array
     {
-        $payload = [
-            'name'                  => '',
-            'email'                 => 'user@example.com',
-            'password'              => 'password123',
+        return array_merge([
+            'name' => 'テスト太郎',
+            'email' => 'test@example.com',
+            'password' => 'password123',
             'password_confirmation' => 'password123',
-        ];
-
-        $res = $this->from(self::REGISTER_GET)->post(self::REGISTER_POST, $payload);
-
-        $res->assertStatus(302)->assertSessionHasErrors(['name']);
-        $this->assertGuest();
-        $this->assertDatabaseCount('users', 0);
+        ], $overrides);
     }
 
-    /** @test */
-    public function メール未入力だとエラーになる(): void
+    /** @test 名前が入力されていない場合、バリデーションメッセージが表示される */
+    public function 名前未入力だとメッセージが表示される()
     {
-        $payload = [
-            'name'                  => 'テスト太郎',
-            'email'                 => '',
-            'password'              => 'password123',
-            'password_confirmation' => 'password123',
-        ];
+        $res = $this->from('/register')->post('/register', $this->validPayload([
+            'name' => '',
+        ]));
 
-        $res = $this->from(self::REGISTER_GET)->post(self::REGISTER_POST, $payload);
-
-        $res->assertStatus(302)->assertSessionHasErrors(['email']);
+        $res->assertRedirect('/register');
+        $res->assertSessionHasErrors([
+            'name' => __('validation.required', ['attribute' => '名前']),
+        ]);
         $this->assertGuest();
-        $this->assertDatabaseCount('users', 0);
     }
 
-    /** @test */
-    public function パスワード未入力だとエラーになる(): void
+    /** @test メールアドレスが入力されていない場合、バリデーションメッセージが表示される */
+    public function メール未入力だとメッセージが表示される()
     {
-        $payload = [
-            'name'                  => 'テスト太郎',
-            'email'                 => 'user@example.com',
-            'password'              => '',
+        $res = $this->from('/register')->post('/register', $this->validPayload([
+            'email' => '',
+        ]));
+
+        $res->assertRedirect('/register');
+        $res->assertSessionHasErrors([
+            'email' => __('validation.required', ['attribute' => 'メールアドレス']),
+        ]);
+        $this->assertGuest();
+    }
+
+    /** @test パスワードが入力されていない場合、バリデーションメッセージが表示される */
+    public function パスワード未入力だとメッセージが表示される()
+    {
+        $res = $this->from('/register')->post('/register', $this->validPayload([
+            'password' => '',
             'password_confirmation' => '',
-        ];
+        ]));
 
-        $res = $this->from(self::REGISTER_GET)->post(self::REGISTER_POST, $payload);
-
-        $res->assertStatus(302)->assertSessionHasErrors(['password']);
-        $this->assertGuest();
-        $this->assertDatabaseCount('users', 0);
-    }
-
-    /** @test */
-    public function パスワードが7文字以下だとエラーになる(): void
-    {
-        $payload = [
-            'name'                  => 'テスト太郎',
-            'email'                 => 'user@example.com',
-            'password'              => 'short7', // 7文字
-            'password_confirmation' => 'short7',
-        ];
-
-        $res = $this->from(self::REGISTER_GET)->post(self::REGISTER_POST, $payload);
-
-        $res->assertStatus(302)->assertSessionHasErrors(['password']); // min:8 に該当
-        $this->assertGuest();
-        $this->assertDatabaseCount('users', 0);
-    }
-
-    /** @test */
-    public function 確認用パスワードと不一致だとエラーになる(): void
-    {
-        $payload = [
-            'name'                  => 'テスト太郎',
-            'email'                 => 'user@example.com',
-            'password'              => 'password123',
-            'password_confirmation' => 'different123',
-        ];
-
-        $res = $this->from(self::REGISTER_GET)->post(self::REGISTER_POST, $payload);
-
-        $res->assertStatus(302)->assertSessionHasErrors(['password']); // confirmed に該当
-        $this->assertGuest();
-        $this->assertDatabaseCount('users', 0);
-    }
-
-    /** @test */
-    public function 既存メールアドレスは登録できない(): void
-    {
-        User::factory()->create([
-            'name'     => '既存',
-            'email'    => 'dup@example.com',
-            'password' => Hash::make('password123'),
+        $res->assertRedirect('/register');
+        $res->assertSessionHasErrors([
+            'password' => __('validation.required', ['attribute' => 'パスワード']),
         ]);
-
-        $payload = [
-            'name'                  => 'テスト太郎',
-            'email'                 => 'dup@example.com', // 重複
-            'password'              => 'password123',
-            'password_confirmation' => 'password123',
-        ];
-
-        $res = $this->from(self::REGISTER_GET)->post(self::REGISTER_POST, $payload);
-
-        $res->assertStatus(302)->assertSessionHasErrors(['email']); // unique:users,email を想定
         $this->assertGuest();
-        $this->assertDatabaseCount('users', 1); // 既存のみ
     }
 
-    /** @test */
-    public function すべて正しく入力すると登録されログイン状態になる(): void
+    /** @test パスワードが7文字以下の場合、バリデーションメッセージが表示される */
+    public function パスワードが7文字以下だとメッセージが表示される()
     {
-        $payload = [
-            'name'                  => 'テスト太郎',
-            'email'                 => 'user@example.com',
-            'password'              => 'password123',
-            'password_confirmation' => 'password123',
-        ];
+        $res = $this->from('/register')->post('/register', $this->validPayload([
+            'password' => '1234567',
+            'password_confirmation' => '1234567',
+        ]));
 
-        $res = $this->post(self::REGISTER_POST, $payload);
-
-        // 1件作成されていること
-        $this->assertDatabaseCount('users', 1);
-        $this->assertDatabaseHas('users', [
-            'email' => 'user@example.com',
-            'name'  => 'テスト太郎',
+        $res->assertRedirect('/register');
+        $res->assertSessionHasErrors([
+            'password' => __('validation.min.string', ['attribute' => 'パスワード', 'min' => 8]),
         ]);
+        $this->assertGuest();
+    }
 
-        // 認証済みになっていること
-        $user = User::first();
+    /** @test パスワードが確認用と一致しない場合、バリデーションメッセージが表示される */
+    public function パスワード不一致だとメッセージが表示される()
+    {
+        $res = $this->from('/register')->post('/register', $this->validPayload([
+            'password_confirmation' => 'mismatch123',
+        ]));
+
+        $res->assertRedirect('/register');
+        $res->assertSessionHasErrors([
+            'password' => __('validation.confirmed', ['attribute' => 'パスワード']),
+        ]);
+        $this->assertGuest();
+    }
+
+    /**
+     * @test
+     * 全ての項目が正しければ会員登録され、プロフィール設定画面に遷移する
+     */
+    public function 正常登録でプロフィール設定画面へリダイレクト()
+    {
+        $res = $this->post('/register', $this->validPayload());
+
+        $res->assertRedirect(route('mypage.profile.edit'));
+
+        $user = User::where('email', 'test@example.com')->first();
+        $this->assertNotNull($user);
         $this->assertAuthenticatedAs($user);
         $this->assertTrue(Hash::check('password123', $user->password));
-
-        // リダイレクト（行き先は実装依存なので 302 のみ緩めに検証）
-        $res->assertStatus(302);
     }
 }

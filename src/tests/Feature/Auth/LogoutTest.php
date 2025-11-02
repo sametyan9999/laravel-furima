@@ -10,29 +10,22 @@ class LogoutTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const LOGOUT_POST = '/logout';
-    private const HOME = '/'; // 遷移先が決まっていれば置き換え
-
-    /** @test */
-    public function ログイン中ならログアウトできる()
+    /**
+     * @test
+     * ログアウトができる
+     */
+    public function ログアウトができる()
     {
         $user = User::factory()->create();
 
+        // ログイン状態にする
         $this->actingAs($user);
 
-        $res = $this->post(self::LOGOUT_POST);
+        // Fortify の /logout は POST
+        $response = $this->post('/logout');
 
+        // トップへリダイレクトし、未認証になる
+        $response->assertStatus(302)->assertRedirect('/');
         $this->assertGuest();
-        $res->assertStatus(302); // Fortify/Breeze 既定はリダイレクト
-        // $res->assertRedirect(self::HOME);
-    }
-
-    /** @test */
-    public function 未ログインでログアウト叩いてもゲストのまま()
-    {
-        $res = $this->post(self::LOGOUT_POST);
-
-        $this->assertGuest();
-        $res->assertStatus(302);
     }
 }

@@ -7,24 +7,26 @@
 
 @section('content')
   <div class="tab">
-    @php $tab = request('tab','recommend'); @endphp
+    @php
+      $tab = request('tab','recommend');
+      $keep = array_filter(['q'=>request('q')]);  // ← 検索語をタブ遷移でも維持
+    @endphp
+
     <a class="tab__link {{ $tab==='recommend' ? 'is-active' : '' }}"
-       href="{{ route('items.index') }}">おすすめ</a>
+       href="{{ route('items.index', $keep) }}">おすすめ</a>
+
     <a class="tab__link {{ $tab==='mylist' ? 'is-active' : '' }}"
-       href="{{ route('items.index', ['tab'=>'mylist']) }}">マイリスト</a>
+       href="{{ route('items.index', array_merge($keep, ['tab'=>'mylist'])) }}">マイリスト</a>
   </div>
 
   <div class="grid">
     @forelse($items as $item)
-      {{-- ✅ 自分の出品は一覧に表示しない --}}
       @if($item->user_id !== auth()->id())
         <a href="{{ route('items.show', $item) }}" class="card">
           <div class="card__thumb">
             @if($item->image_url)
               <img src="{{ $item->image_url }}" alt="{{ $item->name }}">
             @endif
-
-            {{-- ✅ 購入済み（sold）ならバッジ表示 --}}
             @if(($item->status ?? null) === 'sold')
               <span class="card__badge">Sold</span>
             @endif
