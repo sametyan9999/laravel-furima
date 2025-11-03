@@ -8,7 +8,7 @@ class RegisterRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // 誰でも登録できる想定
+        return true; // 誰でも登録可能
     }
 
     public function rules(): array
@@ -24,15 +24,15 @@ class RegisterRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required'                  => '名前は必須です。',
-            'email.required'                 => 'メールアドレスは必須です。',
-            'email.email'                    => 'メールアドレスの形式が正しくありません。',
-            'email.unique'                   => 'このメールアドレスは既に使用されています。',
-            'password.required'              => 'パスワードは必須です。',
-            'password.min'                   => 'パスワードは8文字以上で入力してください。',
-            'password.confirmed'             => '確認用パスワードが一致しません。',
-            'password_confirmation.required' => '確認用パスワードは必須です。',
-            'password_confirmation.min'      => '確認用パスワードは8文字以上で入力してください。',
+            'name.required'                  => 'お名前を入力してください',
+            'email.required'                 => 'メールアドレスを入力してください',
+            'email.email'                    => 'メールアドレスはメール形式で入力してください',
+            'email.unique'                   => 'このメールアドレスは既に使用されています',
+            'password.required'              => 'パスワードを入力してください',
+            'password.min'                   => 'パスワードは8文字以上で入力してください',
+            'password.confirmed'             => '確認用パスワードが一致しません',
+            'password_confirmation.required' => '確認用パスワードを入力してください',
+            'password_confirmation.min'      => '確認用パスワードは8文字以上で入力してください',
         ];
     }
 }

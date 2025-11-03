@@ -38,7 +38,7 @@ class RegisterTest extends TestCase
 
         $res->assertRedirect('/register');
         $res->assertSessionHasErrors([
-            'name' => __('validation.required', ['attribute' => '名前']),
+            'name' => __('validation.required', ['attribute' => 'お名前']),
         ]);
         $this->assertGuest();
     }

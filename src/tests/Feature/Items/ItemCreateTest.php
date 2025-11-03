@@ -17,6 +17,9 @@ class ItemCreateTest extends TestCase
      * 15. 出品商品情報登録
      * 各項目が正しく保存されている
      * （カテゴリ / 商品の状態 / 商品名 / ブランド名 / 商品の説明 / 販売価格 / 画像）
+     *
+     * 実装はカテゴリ多対多（category_item）なので、
+     * items.category_id は検証せず、ピボットを検証する。
      */
     public function test_各項目が正しく保存されている(): void
     {
@@ -29,22 +32,22 @@ class ItemCreateTest extends TestCase
             ->get(route('items.create'))
             ->assertOk();
 
-        // GD不要の 1x1 PNG を生成
-        $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQImWNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=');
+        // 1x1 PNG を生成（GD不要）
+        $png  = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQImWNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=');
         $path = sys_get_temp_dir().'/tiny.png';
         file_put_contents($path, $png);
         $image = new UploadedFile($path, 'tiny.png', 'image/png', null, true);
 
-        // 実装のバリデーション名に合わせる：image_file / category_ids[]
+        // 実装のバリデーションに合わせる：image_file / category_ids[]
         $payload = [
-            'category_id'   => $category->id,       // （実装で使っていれば保存確認に使われる）
-            'category_ids'  => [$category->id],     // ← バリデーションを通すため必須
-            'condition_id'  => $condition->id,
-            'name'          => '出品テスト商品',
-            'brand'         => 'テストブランド',
-            'description'   => '商品の説明テキスト',
-            'price'         => 19800,
-            'image_file'    => $image,              // ← 実装側のフィールド名
+            // 'category_id' => $category->id, // ← 単一カテゴリ列は廃止
+            'category_ids' => [$category->id],
+            'condition_id' => $condition->id,
+            'name'         => '出品テスト商品',
+            'brand'        => 'テストブランド',
+            'description'  => '商品の説明テキスト',
+            'price'        => 19800,
+            'image_file'   => $image,
         ];
 
         $this->actingAs($user)
@@ -53,7 +56,7 @@ class ItemCreateTest extends TestCase
             ->assertStatus(302)
             ->assertSessionHasNoErrors();
 
-        // DB 反映確認（実装に合わせて主要カラムをチェック）
+        // items テーブルの主要カラムを検証（category_id は検証しない）
         $this->assertDatabaseHas('items', [
             'user_id'      => $user->id,
             'name'         => '出品テスト商品',
@@ -61,14 +64,17 @@ class ItemCreateTest extends TestCase
             'description'  => '商品の説明テキスト',
             'price'        => 19800,
             'condition_id' => $condition->id,
-            // category_id を items テーブルに持っている実装ならこちらも一致
-            'category_id'  => $category->id,
+            // 'category_id' => $category->id, // ← 削除
         ]);
 
-        // 多対多を採用している実装の場合は、必要ならこちらも（テーブル名はプロジェクト準拠）
-        // $this->assertDatabaseHas('category_item', [
-        //     'category_id' => $category->id,
-        //     'item_id'     => \App\Models\Item::where('name', '出品テスト商品')->value('id'),
-        // ]);
+        // ピボット（多対多）を検証
+        $itemId = \App\Models\Item::where('name', '出品テスト商品')->value('id');
+
+        $this->assertNotNull($itemId, '作成された商品のIDが取得できませんでした。');
+
+        $this->assertDatabaseHas('category_item', [
+            'item_id'     => $itemId,
+            'category_id' => $category->id,
+        ]);
     }
 }

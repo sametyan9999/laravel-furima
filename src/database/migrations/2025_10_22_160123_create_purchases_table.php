@@ -6,57 +6,48 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('purchases', function (Blueprint $table) {
-            // ✅ UUID 主キー（テストでUUIDを使用しているため）
+            // UUID 主キー（テスト要件に一致）
             $table->uuid('id')->primary();
 
-            // ✅ 購入者
+            // 購入者
             $table->foreignId('user_id')
                   ->constrained('users')
                   ->cascadeOnDelete()
                   ->comment('購入者');
 
-            // ✅ 購入された商品
+            // 購入された商品
             $table->foreignId('item_id')
                   ->constrained('items')
                   ->cascadeOnDelete();
 
-            // ✅ 購入金額（デフォルト0）
+            // 金額・決済
             $table->unsignedInteger('amount')->default(0);
-
-            // ✅ 支払い方法・ステータス
             $table->enum('payment_method', ['card', 'convenience'])->nullable();
             $table->enum('payment_status', ['pending', 'paid', 'failed', 'canceled'])->default('paid');
 
-            // ✅ Stripe決済ID（任意）
+            // Stripe決済ID（任意）
             $table->string('stripe_payment_intent_id', 100)->nullable();
 
-            // ✅ 購入日時
+            // 購入日時
             $table->dateTime('purchased_at')->nullable();
 
-            // ✅ 配送先情報（スナップショット）
-            $table->string('shipping_name', 100)->nullable();
-            $table->string('shipping_postal_code', 8)->nullable(); // 例: 123-4567
-            $table->string('shipping_address1', 255)->nullable();
-            $table->string('shipping_address2', 255)->nullable();
+            // ★ 配送先情報（購入時のスナップショット。未確定時はNULLを許容）
+            $table->string('shipping_name', 100)->nullable()->comment('配送先氏名');
+            $table->string('shipping_postal_code', 8)->nullable()->comment('配送先郵便番号（例: 123-4567）');
+            $table->string('shipping_address1', 255)->nullable()->comment('配送先住所1');
+            $table->string('shipping_address2', 255)->nullable()->comment('配送先住所2');
 
-            // ✅ タイムスタンプ
             $table->timestamps();
 
-            // ✅ インデックス（クエリ高速化）
+            // クエリ最適化
             $table->index(['user_id', 'purchased_at']);
             $table->index(['item_id']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('purchases');

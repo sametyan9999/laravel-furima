@@ -3,20 +3,37 @@
 namespace App\Http\Controllers;
 
 use App\Models\{Item, Purchase, Profile};
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+use App\Http\Requests\ProfileRequest; // ★ 追加（FormRequest）
 
 class ProfileController extends Controller
 {
     /**
      * マイページ（PG09/PG11/PG12）
-     * /mypage?view=buy|sell でタブ切替（デフォルト：sell）
+     *
+     * 仕様互換:
+     * - 画面設計… /mypage?page=buy|sell
+     * - 実装既存… /mypage?view=buy|sell（デフォルト: sell）
+     *
+     * ページネーションの "page" 衝突回避のため、
+     *   - 購入一覧: buy_page
+     *   - 出品一覧: sell_page
+     * を使用する。
      */
     public function index(Request $request)
     {
         $user = Auth::user();
 
-        // タブ判定（sell を既定に）
+        // --- 互換：?page=buy|sell を ?view=buy|sell に正規化 ---
+        if ($request->has('page')) {
+            $legacy = (string) $request->query('page');
+            if (in_array($legacy, ['buy', 'sell'], true)) {
+                $request->merge(['view' => $legacy]);
+            }
+        }
+
+        // タブ判定（既定：sell）
         $view = (string) $request->query('view', 'sell'); // 'buy' | 'sell'
 
         $profile = $user->profile;
@@ -24,18 +41,18 @@ class ProfileController extends Controller
         $sold    = null;
 
         if ($view === 'buy') {
-            // ✅ purchases.user_id（購入者）で検索
+            // ✅ 購入した商品（purchases.user_id で検索）
             $bought = Purchase::with('item')
                 ->where('user_id', $user->id)
                 ->latest('purchased_at')
-                ->paginate(12)
-                ->withQueryString();
+                ->paginate(12, ['*'], 'buy_page')
+                ->appends($request->except('buy_page'));
         } else {
-            // 出品一覧
+            // ✅ 出品した商品
             $sold = Item::where('user_id', $user->id)
                 ->latest()
-                ->paginate(12)
-                ->withQueryString();
+                ->paginate(12, ['*'], 'sell_page')
+                ->appends($request->except('sell_page'));
             $view = 'sell';
         }
 
@@ -51,20 +68,12 @@ class ProfileController extends Controller
 
     /**
      * プロフィール更新（PG10）
+     * ★ 要件のバリデーション表に合わせて ProfileRequest を使用
      */
-    public function update(Request $request)
+    public function update(ProfileRequest $request)
     {
         $user = Auth::user();
-
-        $data = $request->validate([
-            'username'      => ['required','string','max:20'],
-            'postal_code'   => ['required','string','size:8','regex:/^\d{3}-\d{4}$/'],
-            'address_line1' => ['required','string','max:255'],
-            'address_line2' => ['nullable','string','max:255'],
-            'phone'         => ['nullable','string','max:20'],
-            'bio'           => ['nullable','string','max:255'],
-            'avatar'        => ['nullable','image','mimes:jpeg,png','max:10240'],
-        ]);
+        $data = $request->validated(); // ★ validated() を使用
 
         // ユーザー名
         $user->name = $data['username'];
@@ -75,12 +84,19 @@ class ProfileController extends Controller
         $profile->postal_code   = $data['postal_code'];
         $profile->address_line1 = $data['address_line1'];
         $profile->address_line2 = $data['address_line2'] ?? null;
-        $profile->phone         = $data['phone'] ?? null;
-        $profile->bio           = $data['bio'] ?? null;
 
+        // 任意項目（ProfileRequest に含めていれば反映）
+        if (array_key_exists('phone', $data)) {
+            $profile->phone = $data['phone'];
+        }
+        if (array_key_exists('bio', $data)) {
+            $profile->bio = $data['bio'];
+        }
+
+        // アバター画像
         if ($request->hasFile('avatar')) {
             $path = $request->file('avatar')->store('avatars', 'public');
-            $profile->avatar_path = '/storage/' . $path;
+            $profile->avatar_path = '/storage/' . $path; // 公開URLを保存
         }
 
         $profile->save();

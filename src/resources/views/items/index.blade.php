@@ -9,7 +9,9 @@
   <div class="tab">
     @php
       $tab = request('tab','recommend');
-      $keep = array_filter(['q'=>request('q')]);  // ← 検索語をタブ遷移でも維持
+      // 検索語を保持（空文字でも消えないように修正）
+      $q = request()->has('q') ? request('q') : null;
+      $keep = is_null($q) ? [] : ['q'=>$q];
     @endphp
 
     <a class="tab__link {{ $tab==='recommend' ? 'is-active' : '' }}"
@@ -24,8 +26,8 @@
       @if($item->user_id !== auth()->id())
         <a href="{{ route('items.show', $item) }}" class="card">
           <div class="card__thumb">
-            @if($item->image_url)
-              <img src="{{ $item->image_url }}" alt="{{ $item->name }}">
+            @if($item->image)
+              <img src="{{ $item->image }}" alt="{{ $item->name }}">
             @endif
             @if(($item->status ?? null) === 'sold')
               <span class="card__badge">Sold</span>
@@ -38,4 +40,11 @@
       <p class="mt-24">商品がありません。</p>
     @endforelse
   </div>
+
+  {{-- ページネーション（検索条件・タブを保持） --}}
+  @if($items instanceof \Illuminate\Contracts\Pagination\Paginator)
+    <div class="mt-24">
+      {{ $items->appends(request()->query())->links() }}
+    </div>
+  @endif
 @endsection

@@ -9,8 +9,8 @@
 <div class="detail">
   <div class="detail__left">
     <div class="detail__image-wrap">
-      @if($item->image_url)
-        <img class="detail__image" src="{{ $item->image_url }}" alt="{{ $item->name }}">
+      @if($item->image)
+        <img class="detail__image" src="{{ $item->image }}" alt="{{ $item->name }}">
       @endif
       {{-- ✅ 詳細でも sold を表示 --}}
       @if(($item->status ?? null) === 'sold')

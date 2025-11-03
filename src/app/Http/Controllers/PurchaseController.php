@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\{Item, Purchase};
+use App\Http\Requests\{PurchaseRequest, AddressRequest};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -19,18 +19,16 @@ class PurchaseController extends Controller
         abort_if($item->user_id === Auth::id(), 403, '自分の商品は購入できません');
 
         $profile = Auth::user()->profile;
-
-        // ✅ ノンJS/テスト環境でも反映されるように、クエリで初期選択を受け取りサーバ側で描画
-        $allowed         = ['convenience', 'card'];
-        $initialPayment  = in_array($request->query('payment_method'), $allowed, true)
-            ? $request->query('payment_method')
+        $allowed = ['convenience', 'card'];
+        $initial = $request->has('payment_method') && in_array($request->input('payment_method'), $allowed, true)
+            ? $request->input('payment_method')
             : 'convenience';
-        $paymentLabel    = $initialPayment === 'card' ? 'カード支払い' : 'コンビニ払い';
+        $paymentLabel = $initial === 'card' ? 'カード支払い' : 'コンビニ払い';
 
         return view('purchase.index', [
             'item'           => $item,
             'profile'        => $profile,
-            'initialPayment' => $initialPayment,
+            'initialPayment' => $initial,
             'paymentLabel'   => $paymentLabel,
         ]);
     }
@@ -43,29 +41,17 @@ class PurchaseController extends Controller
     }
 
     /** 住所変更保存（PG07） */
-    public function updateAddress(Request $request, Item $item)
+    public function updateAddress(AddressRequest $request, Item $item)
     {
-        $data = $request->validate([
-            'postal_code'   => ['required','string','size:8','regex:/^\d{3}-\d{4}$/'],
-            'address_line1' => ['required','string','max:255'],
-            'address_line2' => ['nullable','string','max:255'],
-            'phone'         => ['nullable','string','max:20'],
-        ]);
-
         $profile = Auth::user()->profile;
-        $profile->fill($data)->save();
-
+        $profile->fill($request->validated())->save();
         return redirect()->route('purchase.index', $item)->with('status', '住所を更新しました');
     }
 
     /** 購入確定（PG06） */
-    public function store(Request $request, Item $item)
+    public function store(PurchaseRequest $request, Item $item)
     {
-        $data = $request->validate([
-            'payment_method' => ['required', Rule::in(['card','convenience'])],
-        ]);
-
-        $user = Auth::user();
+        $user    = Auth::user();
         $profile = $user->profile;
 
         if (!$profile || !$profile->postal_code || !$profile->address_line1) {
@@ -73,15 +59,18 @@ class PurchaseController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($item, $user, $profile, $data) {
+            DB::transaction(function () use ($request, $item, $user, $profile) {
                 $fresh = Item::whereKey($item->id)->lockForUpdate()->first();
                 abort_if(!$fresh || $fresh->status !== 'on_sale', 404, '購入できません');
+
+                $alreadyPurchased = Purchase::where('item_id', $fresh->id)->exists();
+                abort_if($alreadyPurchased, 409, '既に購入済みです');
 
                 Purchase::create([
                     'user_id'                  => $user->id,
                     'item_id'                  => $fresh->id,
                     'amount'                   => $fresh->price,
-                    'payment_method'           => $data['payment_method'],
+                    'payment_method'           => $request->validated()['payment_method'],
                     'payment_status'           => 'paid',
                     'stripe_payment_intent_id' => null,
                     'purchased_at'             => Carbon::now(),
@@ -97,11 +86,10 @@ class PurchaseController extends Controller
                 ]);
             });
         } catch (\Throwable $e) {
-            Log::error('purchase failed: '.$e->getMessage(), ['file'=>$e->getFile(),'line'=>$e->getLine()]);
+            Log::error('purchase failed: '.$e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             return back()->withErrors(['purchase' => '購入手続きに失敗しました。再度お試しください。'])->withInput();
         }
 
-        // 要件：「購入する」押下後は商品一覧へ
         return redirect()->route('items.index')->with('status', '購入が完了しました');
     }
 }

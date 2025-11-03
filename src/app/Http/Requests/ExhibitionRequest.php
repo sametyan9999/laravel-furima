@@ -8,31 +8,30 @@ class ExhibitionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return auth()->check();
     }
 
     public function rules(): array
     {
         return [
-            'name'         => ['required', 'string'],
-            'description'  => ['required', 'string', 'max:255'],
-            // 画像は「アップロード必須・jpeg|png」
-            'image_file'   => ['required', 'image', 'mimes:jpeg,png', 'max:4096'],
-            'category_id'  => ['required', 'exists:categories,id'],
-            'condition_id' => ['required', 'integer', 'exists:conditions,id'],
-            'price'        => ['required', 'integer', 'min:0'],
+            'name'         => ['required', 'string', 'max:255'],
+            'brand'        => ['nullable', 'string', 'max:255'],
+            'description'  => ['required', 'string'],
+            'price'        => ['required', 'integer', 'min:1'],
+            'condition_id' => ['required', 'exists:conditions,id'],
+            // ここがポイント：単一ではなく配列として必須
+            'category_ids'   => ['required', 'array', 'min:1'],
+            'category_ids.*' => ['integer', 'exists:categories,id'],
+            'image_file'     => ['required', 'image', 'mimes:jpg,jpeg,png,gif', 'max:5120'],
         ];
     }
 
     public function attributes(): array
     {
         return [
-            'name'         => '商品名',
-            'description'  => '商品説明',
-            'image_file'   => '商品画像',
-            'category_id'  => '商品のカテゴリー',
-            'condition_id' => '商品の状態',
-            'price'        => '商品価格',
+            'category_ids'   => 'カテゴリ',
+            'category_ids.*' => 'カテゴリ',
+            'image_file'     => '商品画像',
         ];
     }
 }

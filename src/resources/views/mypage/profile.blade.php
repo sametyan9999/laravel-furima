@@ -15,6 +15,7 @@
           enctype="multipart/form-data"
           class="profile-form">
       @csrf
+      @method('PUT') {{-- ← ここを追加してルート（PUT）に対応 --}}
 
       {{-- アバター & 画像選択 --}}
       <div class="avatar-block">
