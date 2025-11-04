@@ -110,7 +110,23 @@ DB_PASSWORD=laravel_pass
 ---
 
 ## ER図
+erDiagram
+  USERS ||--|| PROFILES : "1 : 1"
+  USERS ||--o{ ITEMS : "1 : N (sells)"
+  USERS ||--o{ COMMENTS : "1 : N (writes)"
+  USERS ||--o{ PURCHASES : "1 : N (buys)"
+  USERS ||--o{ LIKES : "1 : N (likes)"
 
+  ITEMS }o--o{ CATEGORIES : "N : N via category_item"
+  CATEGORIES ||--o{ CATEGORIES : "1 : N parent->children"
+
+  CONDITIONS ||--o{ ITEMS : "1 : N (condition)"
+
+  ITEMS ||--o{ COMMENTS : "1 : N (has)"
+  ITEMS ||--o{ LIKES : "1 : N (liked by)"
+
+  %% アプリ仕様：実質 1 : 0..1（DB 制約ではない）
+  ITEMS ||--o| PURCHASES : "1 : 0..1 (app rule)"
 
 ---
 
