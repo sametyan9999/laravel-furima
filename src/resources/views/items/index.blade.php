@@ -9,7 +9,7 @@
   <div class="tab">
     @php
       $tab = request('tab','recommend');
-      // 検索語を保持（空文字でも消えないように修正）
+      // 検索語を保持（空文字でも消えないように）
       $q = request()->has('q') ? request('q') : null;
       $keep = is_null($q) ? [] : ['q'=>$q];
     @endphp
@@ -26,10 +26,10 @@
       @if($item->user_id !== auth()->id())
         <a href="{{ route('items.show', $item) }}" class="card">
           <div class="card__thumb">
-            @if($item->image)
-              <img src="{{ $item->image }}" alt="{{ $item->name }}">
-            @endif
-            @if(($item->status ?? null) === 'sold')
+            {{-- ✅ 画像はアクセサを利用 --}}
+            <img src="{{ $item->image_url ?? '/images/noimage.png' }}" alt="{{ $item->name }}">
+            {{-- ✅ 売済み判定：status か purchases 存在（is_sold） --}}
+            @if(($item->status ?? null) === 'sold' || ($item->is_sold ?? false))
               <span class="card__badge">Sold</span>
             @endif
           </div>

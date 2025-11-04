@@ -16,7 +16,6 @@ class ItemController extends Controller
     {
         $this->middleware('auth')->only([
             'mylist', 'create', 'store', 'storeComment',
-            // like/unlike だけ残す
             'like', 'unlike',
         ]);
     }
@@ -54,7 +53,7 @@ class ItemController extends Controller
                     });
                 })
                 ->when(!is_null($category), function ($q) use ($category) {
-                    $q->whereHas('categories', fn ($qq) => $qq->where('categories.id', $category));
+                    $q->whereHas('categories', fn ($qq) => $qq->where('categories.id', (int)$category));
                 })
                 ->orderByRaw("CASE WHEN items.status='on_sale' THEN 0 ELSE 1 END")
                 ->orderBy('items.created_at', 'desc')
@@ -79,7 +78,7 @@ class ItemController extends Controller
             })
             ->when(Auth::check(), fn ($q) => $q->where('user_id', '!=', Auth::id()))
             ->when(!is_null($category), function ($q) use ($category) {
-                $q->whereHas('categories', fn ($qq) => $qq->where('categories.id', $category));
+                $q->whereHas('categories', fn ($qq) => $qq->where('categories.id', (int)$category));
             })
             ->orderByRaw("CASE WHEN status='on_sale' THEN 0 ELSE 1 END")
             ->latest()
@@ -108,7 +107,7 @@ class ItemController extends Controller
                 });
             })
             ->when(!is_null($category), function ($q) use ($category) {
-                $q->whereHas('categories', fn ($qq) => $qq->where('categories.id', $category));
+                $q->whereHas('categories', fn ($qq) => $qq->where('categories.id', (int)$category));
             })
             ->orderByRaw("CASE WHEN items.status='on_sale' THEN 0 ELSE 1 END")
             ->orderBy('items.created_at', 'desc')
@@ -153,33 +152,38 @@ class ItemController extends Controller
 
     /**
      * 出品登録
-     * - N:N（category_item）に保存
-     * - 後方互換のため items.category_id にも代表カテゴリを保存
+     * - items.category_id（代表カテゴリ）にも保存
+     * - 多対多（category_item）にも保存
      * - 入力は `category_id`（単数）/`category_ids[]`（複数）の両対応
      */
     public function store(ExhibitionRequest $request)
     {
         $data = $request->validated();
 
-        // 画像保存（/storage/items/... の公開URL）
-        $path     = $request->file('image_file')->store('items', 'public');
-        $imageUrl = Storage::url($path);
+        // 画像: フォーム名の差異に両対応（image_file / image）
+        $file = $request->file('image_file') ?? $request->file('image');
+        $path = $file ? $file->store('items', 'public') : null;
+        $imageUrl = $path ? Storage::url($path) : '/storage/items/sample.jpg';
 
         return DB::transaction(function () use ($request, $data, $imageUrl) {
-            // ---- 代表カテゴリ決定 ----
-            $primaryCategoryId =
-                $data['category_id'] ??
-                ($data['category_ids'][0] ?? null) ??
-                ($request->filled('category_id') ? (int)$request->input('category_id') : null) ??
-                (is_array($request->input('category_ids')) && count($request->input('category_ids')) > 0
-                    ? (int)$request->input('category_ids')[0]
-                    : null);
-
-            if (is_null($primaryCategoryId)) {
-                $primaryCategoryId = (int) Category::orderBy('id')->value('id');
+            // 代表カテゴリ決定
+            $ids = $data['category_ids'] ?? null;
+            if (is_null($ids) && isset($data['category_id'])) {
+                $ids = [$data['category_id']];
             }
+            if (is_null($ids) && $request->filled('category_id')) {
+                $ids = [(int) $request->input('category_id')];
+            }
+            if (is_null($ids) && is_array($request->input('category_ids'))) {
+                $ids = $request->input('category_ids');
+            }
+            if (!$ids) {
+                $ids = [ (int) Category::orderBy('id')->value('id') ];
+            }
+            $ids = collect($ids)->map(fn($v)=>(int)$v)->filter()->unique()->values()->all();
+            $primaryCategoryId = $ids[0];
 
-            // ---- Item 作成（items.category_id も保存）----
+            // Item 作成（代表カテゴリも保存）
             $item = Item::create([
                 'user_id'      => auth()->id(),
                 'condition_id' => $data['condition_id'],
@@ -192,28 +196,8 @@ class ItemController extends Controller
                 'status'       => 'on_sale',
             ]);
 
-            // ---- 多対多カテゴリの同期 ----
-            $ids = $data['category_ids'] ?? null;
-
-            if (is_null($ids) && isset($data['category_id'])) {
-                $ids = [$data['category_id']];
-            }
-            if (is_null($ids) && $request->filled('category_id')) {
-                $ids = [(int) $request->input('category_id')];
-            }
-            if (is_null($ids) && is_array($request->input('category_ids'))) {
-                $ids = $request->input('category_ids');
-            }
-
-            if ($ids) {
-                $ids = collect($ids)->map(fn ($v) => (int) $v)->filter()->unique()->values()->all();
-                if (count($ids) === 0) {
-                    $ids = [$primaryCategoryId];
-                }
-                $item->categories()->sync($ids);
-            } else {
-                $item->categories()->sync([$primaryCategoryId]);
-            }
+            // 多対多カテゴリ保存
+            $item->categories()->sync($ids);
 
             return redirect()->route('items.show', $item)->with('status', '出品しました');
         });
@@ -262,7 +246,9 @@ class ItemController extends Controller
                 'item_id' => $item->id,
                 'body'    => $validated['body'],
             ]);
-            $item->increment('comments_count');
+            if ($item->isFillable('comments_count')) {
+                $item->increment('comments_count');
+            }
         });
 
         return back()->with('status', 'コメントを投稿しました');
