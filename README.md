@@ -37,7 +37,9 @@
     ```
 
 2. コンテナをビルド・起動
+    ```
     docker-compose up -d --build
+    ```
 ※ MySQL が OS によって起動しない場合があるので、それぞれのPCに合わせて docker-compose.yml を編集してください。
 
 ### Laravel環境構築
