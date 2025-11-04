@@ -101,29 +101,17 @@ phpmyadmin/phpmyadmin:latest
 ---
 
 ## 使用技術(実行環境)
-・言語
-PHP 8.1
 
-・フレームワーク
-Laravel 10.x
-
-・データベース
-MySQL 8.4
-
-・インフラ
-Docker / Docker Compose
-
-・認証
-Laravel Fortify
-
-・フロントエンド
-Blade, jQuery 3.7.1
-
-・管理ツール
-phpMyAdmin
-
-・バージョン管理
-Git / GitHub
+| 分類 | 技術・ライブラリ |
+|------|----------------|
+| 言語 | PHP 8.1 |
+| フレームワーク | Laravel 10.x |
+| データベース | MySQL 8.4 |
+| インフラ | Docker / Docker Compose |
+| 認証 | Laravel Fortify |
+| フロントエンド | Blade, jQuery 3.7.1 |
+| 管理ツール | phpMyAdmin |
+| バージョン管理 | Git / GitHub |
 
 ---
 
