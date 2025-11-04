@@ -1,6 +1,6 @@
 # coachtechフリマ
 
-ある企業が開発した独自のフリマアプリを想定し、アイテムの出品・購入を行うためのWebアプリケーションです。
+アイテムの出品・購入を行うためのWebアプリケーションです。
 ユーザーはログイン後に商品を出品したり、他ユーザーの商品を購入・いいね・コメントすることができます。
 
 ---
@@ -30,31 +30,30 @@
 
 ### Dockerビルド
 1. リポジトリのクローン
-    ```
-    bash
+    ```bash
     git clone https://github.com/sametyan9999/laravel-furima.git
     cd laravel-furima
     ```
 
 2. コンテナをビルド・起動
-    ```
+    ```bash
     docker-compose up -d --build
     ```
 ※ MySQL が OS によって起動しない場合があるので、それぞれのPCに合わせて docker-compose.yml を編集してください。
 
 ### Laravel環境構築
 1. PHPコンテナに入る
-    ```
+    ```bash
     docker compose exec php bash
     ```
 
 2. 依存関係をインストール
-    ```
+    ```bash
     composer install
     ```
 
 3. .env ファイルを作成
-    ```
+    ```env
     cp .env.example .env
     ```
 
@@ -69,17 +68,17 @@ DB_PASSWORD=laravel_pass
 ```
 
 5. アプリケーションキーを生成
-    ```
+    ```bash
     php artisan key:generate
     ```
 
 6. マイグレーションを実行
-    ```
+    ```bash
     php artisan migrate
     ```
 
 7. シーディングを実行
-    ```
+    ```bash
     php artisan db:seed
     ```
 
