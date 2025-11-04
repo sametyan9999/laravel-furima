@@ -29,13 +29,27 @@
 
     <div class="detail__icons" aria-label="ステータス">
       @auth
-        <form method="POST" action="{{ route('items.like', $item) }}" style="display:inline;">
-          @csrf
-          <button type="submit" class="icon-like {{ $liked ? 'is-liked' : '' }}"
-                  aria-pressed="{{ $liked ? 'true' : 'false' }}">★</button>
-        </form>
+        {{-- ✅ いいねトグル：未いいね→POST /like、いいね済み→DELETE /unlike --}}
+        @if($liked)
+          <form method="POST" action="{{ route('items.unlike', $item) }}" style="display:inline;">
+            @csrf
+            @method('DELETE')
+            <button type="submit"
+                    class="icon-like is-liked"
+                    aria-pressed="true"
+                    title="いいね解除">★</button>
+          </form>
+        @else
+          <form method="POST" action="{{ route('items.like', $item) }}" style="display:inline;">
+            @csrf
+            <button type="submit"
+                    class="icon-like"
+                    aria-pressed="false"
+                    title="いいねする">★</button>
+          </form>
+        @endif
       @else
-        <a href="{{ route('login') }}" class="icon-like">★</a>
+        <a href="{{ route('login') }}" class="icon-like" title="ログインしていいね">★</a>
       @endauth
       <small class="ml-8">{{ $item->likes_count }}</small>
 
@@ -52,7 +66,7 @@
 
     <section class="detail__section">
       <h2>商品説明</h2>
-      <p class="detail__desc">{{ $item->description ?? 'カラー：グレー / 新品 / 即発送' }}</p>
+      <p class="detail__desc">{{ $item->description ?? '' }}</p>
     </section>
 
     <section class="detail__section">
@@ -77,7 +91,9 @@
 
     <section class="detail__section">
       <h2>コメント（{{ $comments->count() }}）</h2>
-      @forelse($comments as $c)
+
+      {{-- ✅ コメントがある場合のみ表示 --}}
+      @foreach($comments as $c)
         <div class="comment">
           <div class="avatar"></div>
           <div class="comment__meta">
@@ -85,18 +101,22 @@
           </div>
         </div>
         <div class="comment__bubble">{{ $c->body }}</div>
-      @empty
-        <div class="muted mt-8">まだコメントはありません。</div>
-      @endforelse
+      @endforeach
 
-      <form method="post" action="{{ route('items.comments.store', $item) }}" class="mt-16">
+      {{-- ✅ コメント投稿フォーム --}}
+      <form method="POST" action="{{ route('items.comments.store', $item) }}" class="mt-16" novalidate>
         @csrf
-        <label class="mb-8 d-block">商品へのコメント</label>
-        <textarea name="body" rows="5" maxlength="255" class="w-100"
-                  placeholder="こちらにコメントを入力してください" required></textarea>
+        <label for="comment-body" class="mb-8 d-block">商品へのコメント</label>
+        <textarea id="comment-body"
+                  name="body"
+                  rows="5"
+                  class="w-100"
+                  placeholder="こちらにコメントを入力してください">{{ old('body') }}</textarea>
+
         @error('body')
           <div class="muted mt-8">{{ $message }}</div>
         @enderror
+
         <button type="submit" class="gt-btn gt-btn--comment mt-16">コメントを送信する</button>
       </form>
     </section>

@@ -1,6 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
+
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ProfileController;
@@ -14,82 +18,67 @@ Route::get('/item/{item}', [ItemController::class, 'show'])
     ->name('items.show');
 
 /**
- * マイリスト
+ * メール認証フロー（Fortify標準）
  */
-Route::get('/mylist', [ItemController::class, 'mylist'])
-    ->middleware('auth')
-    ->name('items.mylist');
-Route::get('/items/mylist', [ItemController::class, 'mylist'])
-    ->middleware('auth')
-    ->name('items.mylist.legacy');
+Route::get('/email/verify', function () {
+    return view('auth.verify'); // 誘導画面
+})->middleware(['auth'])->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill(); // 認証完了
+    return redirect()->route('mypage.profile.edit'); // プロフィール編集へ
+})->middleware(['auth', 'signed', 'throttle:6,1'])->name('verification.verify');
+
+Route::post('/email/verification-notification', function (Request $request) {
+    if ($request->user()->hasVerifiedEmail()) {
+        return redirect()->route('items.index');
+    }
+    $request->user()->sendEmailVerificationNotification();
+    return back()->with('status', 'verification-link-sent');
+})->middleware(['auth', 'throttle:3,1'])->name('verification.send');
 
 /**
- * 出品
+ * （テスト手順②対応）local限定：ボタン押下で認証サイトへ直遷移
  */
-Route::get('/sell', [ItemController::class, 'create'])
-    ->middleware('auth')
-    ->name('items.create');
-Route::post('/sell', [ItemController::class, 'store'])
-    ->middleware('auth')
-    ->name('items.store');
+Route::get('/email/verify/direct', function () {
+    abort_unless(app()->environment('local') && auth()->check(), 403);
+    $signed = URL::temporarySignedRoute(
+        'verification.verify',
+        now()->addMinutes(60),
+        ['id' => auth()->id(), 'hash' => sha1(auth()->user()->email)]
+    );
+    return redirect($signed);
+})->middleware(['auth'])->name('verification.direct');
 
 /**
- * いいね
- * - 追加:  POST   /items/{item}/like   => items.like
- * - 解除:  DELETE /items/{item}/unlike => items.unlike
- *   （テストは DELETE /items/{item}/unlike を叩く構成）
+ * 会員向け機能（要ログイン＋メール認証）
  */
-Route::post('/items/{item}/like', [ItemController::class, 'like'])
-    ->whereNumber('item')
-    ->middleware('auth')
-    ->name('items.like');
+Route::middleware(['auth', 'verified'])->group(function () {
 
-Route::delete('/items/{item}/unlike', [ItemController::class, 'unlike'])
-    ->whereNumber('item')
-    ->middleware('auth')
-    ->name('items.unlike');
+    // マイリスト
+    Route::get('/mylist', [ItemController::class, 'mylist'])->name('items.mylist');
+    Route::get('/items/mylist', [ItemController::class, 'mylist'])->name('items.mylist.legacy');
 
-/**
- * コメント
- */
-Route::post('/items/{item}/comments', [ItemController::class, 'storeComment'])
-    ->whereNumber('item')
-    ->middleware('auth')
-    ->name('items.comments.store');
+    // 出品
+    Route::get('/sell', [ItemController::class, 'create'])->name('items.create');
+    Route::post('/sell', [ItemController::class, 'store'])->name('items.store');
 
-/**
- * 購入
- */
-Route::get('/purchase/{item}', [PurchaseController::class, 'index'])
-    ->whereNumber('item')
-    ->middleware('auth')
-    ->name('purchase.index');
-Route::post('/purchase/{item}', [PurchaseController::class, 'store'])
-    ->whereNumber('item')
-    ->middleware('auth')
-    ->name('purchase.store');
+    // いいね
+    Route::post('/items/{item}/like', [ItemController::class, 'like'])->whereNumber('item')->name('items.like');
+    Route::delete('/items/{item}/unlike', [ItemController::class, 'unlike'])->whereNumber('item')->name('items.unlike');
 
-/**
- * 住所変更
- */
-Route::get('/purchase/address/{item}', [PurchaseController::class, 'editAddress'])
-    ->whereNumber('item')
-    ->middleware('auth')
-    ->name('purchase.address');
-Route::put('/purchase/address/{item}', [PurchaseController::class, 'updateAddress'])
-    ->whereNumber('item')
-    ->middleware('auth')
-    ->name('purchase.address.update');
+    // コメント
+    Route::post('/items/{item}/comments', [ItemController::class, 'storeComment'])
+        ->whereNumber('item')->name('items.comments.store');
 
-/**
- * マイページ
- */
-Route::get('/mypage', [ProfileController::class, 'index'])
-    ->middleware('auth')
-    ->name('mypage.index');
-Route::get('/mypage/profile', [ProfileController::class, 'edit'])
-    ->middleware('auth')
-    ->name('mypage.profile.edit');
-Route::put('/mypage/profile', [ProfileController::class, 'update'])
-    ->middleware('auth')
-    ->name('mypage.profile.update');
+    // 購入
+    Route::get('/purchase/{item}', [PurchaseController::class, 'index'])->whereNumber('item')->name('purchase.index');
+    Route::post('/purchase/{item}', [PurchaseController::class, 'store'])->whereNumber('item')->name('purchase.store');
+    Route::get('/purchase/{item}/success', [PurchaseController::class, 'success'])->whereNumber('item')->name('purchase.success');
+    Route::get('/purchase/{item}/cancel', [PurchaseController::class, 'cancel'])->whereNumber('item')->name('purchase.cancel');
+
+    // マイページ
+    Route::get('/mypage', [ProfileController::class, 'index'])->name('mypage.index');
+    Route::get('/mypage/profile', [ProfileController::class, 'edit'])->name('mypage.profile.edit');
+    Route::put('/mypage/profile', [ProfileController::class, 'update'])->name('mypage.profile.update');
+});

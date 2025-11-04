@@ -1,6 +1,8 @@
+version: "3.9"
+
 services:
   nginx:
-    image: nginx:1.27-alpine         # ← arm64対応タグに更新
+    image: nginx:1.27-alpine
     ports:
       - "80:80"
     volumes:
@@ -10,14 +12,15 @@ services:
       - php
 
   php:
-    build: ./docker/php               # php:8.1/8.2-fpm の Dockerfile でOK
+    build: ./docker/php
     volumes:
       - ./src:/var/www
     depends_on:
       - mysql
+      - mailhog
 
   mysql:
-    image: mysql:8.4                  # ← arm64対応の LTS
+    image: mysql:8.4
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: laravel_db
@@ -30,7 +33,7 @@ services:
       - "3306:3306"
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin:latest  # ← arm64対応
+    image: phpmyadmin/phpmyadmin:latest
     environment:
       PMA_ARBITRARY: 1
       PMA_HOST: mysql
@@ -40,3 +43,11 @@ services:
       - "8080:80"
     depends_on:
       - mysql
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    restart: unless-stopped
+    ports:
+      - "8025:8025"   # Web UI: http://localhost:8025
+    environment:
+      - MH_SMTP_BIND_ADDR=0.0.0.0:1025

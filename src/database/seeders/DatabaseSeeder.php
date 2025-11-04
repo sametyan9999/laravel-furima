@@ -14,8 +14,8 @@ class DatabaseSeeder extends Seeder
             ConditionsSeeder::class,
             CategoriesSeeder::class,
             ItemsSeeder::class,
-            CommentsSeeder::class,   // 任意
-            LikesSeeder::class,      // 任意
+            // CommentsSeeder::class,   // 提出用は無効化
+            // LikesSeeder::class,      // 提出用は無効化
         ]);
     }
 }

@@ -18,25 +18,44 @@
     <div class="auth-container" style="margin-top:48px;">
       <h1 class="page-title">ログイン</h1>
 
-      <form class="auth-form" method="post" action="{{ route('login') }}">
+      {{-- ✅ ブラウザの自動バリデーションを無効化（novalidate追加） --}}
+      <form class="auth-form" method="post" action="{{ route('login') }}" novalidate>
         @csrf
 
+        {{-- メールアドレス --}}
         <div class="form-group">
           <label for="email">メールアドレス</label>
-          <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
-          @error('email') <div class="error">{{ $message }}</div> @enderror
+          <input id="email"
+                 type="email"
+                 name="email"
+                 value="{{ old('email') }}"
+                 required
+                 autocomplete="email"
+                 autofocus>
+          @error('email')
+            <div class="error">{{ $message }}</div>
+          @enderror
         </div>
 
+        {{-- パスワード --}}
         <div class="form-group">
           <label for="password">パスワード</label>
-          <input id="password" type="password" name="password" required autocomplete="current-password">
-          @error('password') <div class="error">{{ $message }}</div> @enderror
+          <input id="password"
+                 type="password"
+                 name="password"
+                 required
+                 autocomplete="current-password">
+          @error('password')
+            <div class="error">{{ $message }}</div>
+          @enderror
         </div>
 
+        {{-- ログインボタン --}}
         <div class="form-actions">
           <button type="submit" class="btn btn-primary btn-wide">ログインする</button>
         </div>
 
+        {{-- 会員登録リンク --}}
         <p class="help-link">
           <a href="{{ route('register') }}">会員登録はこちら</a>
         </p>

@@ -38,6 +38,9 @@ return [
     |--------------------------------------------------------------------------
     | Home Path
     |--------------------------------------------------------------------------
+    |
+    | ユーザーがログイン後にリダイレクトされるパス。
+    |
     */
     'home' => RouteServiceProvider::HOME,
 
@@ -82,16 +85,16 @@ return [
     | Features
     |--------------------------------------------------------------------------
     |
-    | 仕様書に基づきメール認証やプロフィール更新を有効化
+    | メール認証機能など、仕様書に基づく拡張機能を有効化。
     |
     */
     'features' => [
-        Features::registration(),
-        Features::resetPasswords(),
-        Features::emailVerification(), // ✅ メール認証を有効化
-        Features::updateProfileInformation(),
-        Features::updatePasswords(),
-        Features::twoFactorAuthentication([
+        Features::registration(),              // 新規登録
+        Features::resetPasswords(),            // パスワードリセット
+        Features::emailVerification(),         // ✅ メール認証を有効化
+        Features::updateProfileInformation(),  // プロフィール更新
+        Features::updatePasswords(),           // パスワード変更
+        Features::twoFactorAuthentication([    // 2段階認証（オプション）
             'confirm' => true,
             'confirmPassword' => true,
         ]),

@@ -11,7 +11,9 @@ class Item extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', /* 'category_id', */ 'condition_id',
+        'user_id',
+        'category_id', // ★ これを必ず含める（NOT NULL対策）
+        'condition_id',
         'name', 'description', 'brand', 'image', 'price',
         'status', 'likes_count', 'comments_count', 'sold_at',
     ];
@@ -34,10 +36,10 @@ class Item extends Model
     public function user()      { return $this->belongsTo(User::class); }
     public function condition() { return $this->belongsTo(Condition::class, 'condition_id'); }
 
-    // 後方互換（単一カテゴリ実装からの移行用。items に category_id はもう無い想定）
+    // 単一カテゴリ（代表カテゴリ）
     public function category()  { return $this->belongsTo(Category::class); }
 
-    // 正式：複数カテゴリ（N:N）
+    // 複数カテゴリ（中間テーブル category_item）
     public function categories()
     {
         return $this->belongsToMany(Category::class, 'category_item')->withTimestamps();

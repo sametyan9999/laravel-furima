@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail; // ✅ メール認証インターフェース
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -13,15 +13,33 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    protected $fillable = ['name','email','password'];
+    /**
+     * 一括代入可能属性
+     */
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+    ];
 
-    protected $hidden = ['password','remember_token'];
+    /**
+     * 非表示属性
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
 
+    /**
+     * キャスト属性
+     */
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
 
-    // 平文なら自動でハッシュ、既にbcryptならそのまま
+    /**
+     * パスワードが平文なら自動でハッシュ化する。
+     */
     public function setPasswordAttribute($value): void
     {
         $this->attributes['password'] =
@@ -30,19 +48,40 @@ class User extends Authenticatable implements MustVerifyEmail
                 : Hash::make($value);
     }
 
-    // リレーション
-    public function profile()   { return $this->hasOne(Profile::class); }
-    public function items()     { return $this->hasMany(Item::class); }
-    public function comments()  { return $this->hasMany(Comment::class); }
-    public function likes()     { return $this->hasMany(Like::class); }
+    /**
+     * リレーション定義
+     */
+    public function profile()
+    {
+        return $this->hasOne(Profile::class);
+    }
 
-    // いいねした商品（便宜）
+    public function items()
+    {
+        return $this->hasMany(Item::class);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    public function likes()
+    {
+        return $this->hasMany(Like::class);
+    }
+
+    /**
+     * いいねした商品一覧
+     */
     public function likedItems()
     {
         return $this->belongsToMany(Item::class, 'likes')->withTimestamps();
     }
 
-    // 購入情報（buyer_user_id を使用）
+    /**
+     * 購入履歴（buyer_user_id を使用）
+     */
     public function purchases()
     {
         return $this->hasMany(Purchase::class, 'buyer_user_id');

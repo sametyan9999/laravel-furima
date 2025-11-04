@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory; // ← 追加！
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
 {
-    use HasFactory; // ← 追加！
+    use HasFactory;
 
     protected $fillable = ['name', 'parent_id', 'sort'];
 
@@ -17,7 +17,6 @@ class Category extends Model
         return $this->belongsToMany(Item::class, 'category_item')->withTimestamps();
     }
 
-    /** （旧）単一カテゴリ用の関係：後方互換として残す */
     public function singleItems()
     {
         return $this->hasMany(Item::class);
