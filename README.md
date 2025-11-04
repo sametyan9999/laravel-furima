@@ -1,21 +1,121 @@
-# COACHTECHフリマ
+# coachtechフリマ
+
+ある企業が開発した独自のフリマアプリを想定し、アイテムの出品・購入を行うためのWebアプリケーションです。
+ユーザーはログイン後に商品を出品したり、他ユーザーの商品を購入・いいね・コメントすることができます。
+
+---
+
+## アプリケーション概要
+- サービス名：**coachtechフリマ**
+- サービス概要：出品・購入・いいね機能を備えたフリマアプリ
+- 制作目的：LaravelおよびDocker環境でのWebアプリ開発実践
+- 開発目標：初年度のユーザー数1,000人達成を想定
+- 対象ユーザー：10〜30代の社会人
+- 使用環境：PC（Chrome / Firefox / Safari 最新版対応）
+
+---
+
+## 主な機能
+- ユーザー登録 / ログイン / ログアウト（Laravel Fortify使用）
+- 商品一覧表示（おすすめ / マイリスト切替）
+- 商品詳細表示・コメント投稿
+- 商品出品（画像アップロード対応）
+- いいね登録・解除機能
+- 購入機能（住所変更・支払い方法選択）
+- マイページ（購入履歴 / 出品履歴 / プロフィール編集）
+
+---
 
 ## 環境構築
-- `git clone <repo>`
-- `docker compose up -d --build`
-- `docker compose exec php bash`
-- `composer install`
-- `cp .env.example .env` （DBは .env に同梱のDocker値をセット済み）
-- `php artisan key:generate`
-- `php artisan migrate --seed`
-- `php artisan storage:link`
 
-## 開発URL
-- アプリ: http://localhost/
-- phpMyAdmin: http://localhost:8080/
+### Dockerビルド
+1. リポジトリのクローン
+    ```bash
+    git clone https://github.com/sametyan9999/laravel-furima.git
+    cd laravel-furima
+    ```
 
-## 使用技術（実行環境）
-- PHP 8.1 / Laravel 8.x / MySQL 8.4 / nginx 1.27 / Docker
+2. コンテナをビルド・起動
+    docker-compose up -d --build
+※ MySQL が OS によって起動しない場合があるので、それぞれのPCに合わせて docker-compose.yml を編集してください。
+
+### Laravel環境構築
+1. PHPコンテナに入る
+    docker compose exec php bash
+
+2. 依存関係をインストール
+    composer install
+
+3. .env ファイルを作成
+    cp .env.example .env
+
+4. .env のDB設定を修正（Docker用に修正）
+```
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=laravel_db
+DB_USERNAME=laravel_user
+DB_PASSWORD=laravel_pass
+```
+
+5. アプリケーションキーを生成
+    php artisan key:generate
+
+6. マイグレーションを実行
+    php artisan migrate
+
+7. シーディングを実行
+    php artisan db:seed
+
+### 環境情報（Docker構成）
+・nginx
+nginx:1.27-alpine
+
+・php
+php:8.1-fpm
+
+・mysql
+mysql:8.4
+
+・phpMyAdmin
+phpmyadmin/phpmyadmin:latest
+
+
+### 使用技術(実行環境)
+・言語
+PHP 8.1
+
+・フレームワーク
+Laravel 10.x
+
+・データベース
+MySQL 8.4
+
+・インフラ
+Docker / Docker Compose
+
+・認証
+Laravel Fortify
+
+・フロントエンド
+Blade, jQuery 3.7.1
+
+・管理ツール
+phpMyAdmin
+
+・バージョン管理
+Git / GitHub
 
 ## ER図
-![ER](docs/er.png)  <!-- 画像パスは任意 -->
+
+
+
+## アプリケーションURL
+開発環境 : http://localhost
+
+phpMyAdmin : http://localhost:8080
+
+ユーザー登録 : http://localhost/register
+
+ログイン : http://localhost/login
