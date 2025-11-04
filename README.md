@@ -86,17 +86,12 @@ DB_PASSWORD=laravel_pass
     ---
 
 ## 環境情報（Docker構成）
-・nginx
-nginx:1.27-alpine
-
-・php
-php:8.1-fpm
-
-・mysql
-mysql:8.4
-
-・phpMyAdmin
-phpmyadmin/phpmyadmin:latest
+| サービス | バージョン / イメージ | 備考 |
+|-----------|----------------------|------|
+| nginx | nginx:1.27-alpine | ARM対応 |
+| php | php:8.1-fpm | Composer導入済 |
+| mysql | mysql:8.4 | Docker永続化設定済 |
+| phpMyAdmin | phpmyadmin/phpmyadmin:latest | 管理用GUI |
 
 ---
 
