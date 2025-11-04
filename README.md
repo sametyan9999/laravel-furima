@@ -110,6 +110,7 @@ DB_PASSWORD=laravel_pass
 ---
 
 ## ER図
+ ```mermaid
 erDiagram
   USERS ||--|| PROFILES : "1 : 1"
   USERS ||--o{ ITEMS : "1 : N (sells)"
@@ -127,7 +128,7 @@ erDiagram
 
   %% アプリ仕様：実質 1 : 0..1（DB 制約ではない）
   ITEMS ||--o| PURCHASES : "1 : 0..1 (app rule)"
-
+```
 ---
 
 ## アプリケーションURL
