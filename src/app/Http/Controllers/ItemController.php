@@ -15,8 +15,8 @@ class ItemController extends Controller
     public function __construct()
     {
         $this->middleware('auth')->only([
-            'mylist', 'create', 'store', 'toggleLike', 'storeComment',
-            // ★ 追加
+            'mylist', 'create', 'store', 'storeComment',
+            // like/unlike だけ残す
             'like', 'unlike',
         ]);
     }
@@ -227,7 +227,6 @@ class ItemController extends Controller
         DB::transaction(function () use ($item, $userId) {
             if (! $item->likes()->where('user_id', $userId)->exists()) {
                 $item->likes()->create(['user_id' => $userId]);
-                // 下限ガード付きでカウント更新
                 if ($item->isFillable('likes_count')) {
                     $item->increment('likes_count');
                 }
@@ -246,27 +245,6 @@ class ItemController extends Controller
             $deleted = $item->likes()->where('user_id', $userId)->delete();
             if ($deleted && $item->isFillable('likes_count') && $item->likes_count > 0) {
                 $item->decrement('likes_count');
-            }
-        });
-
-        return back();
-    }
-
-    /** いいねトグル（UI用に残す） */
-    public function toggleLike(Item $item)
-    {
-        $user = auth()->user();
-
-        DB::transaction(function () use ($user, $item) {
-            $like = Like::where('user_id', $user->id)->where('item_id', $item->id)->first();
-            if ($like) {
-                $like->delete();
-                if ($item->likes_count > 0) {
-                    $item->decrement('likes_count');
-                }
-            } else {
-                Like::firstOrCreate(['user_id' => $user->id, 'item_id' => $item->id]);
-                $item->increment('likes_count');
             }
         });
 
