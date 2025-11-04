@@ -30,7 +30,8 @@
 
 ### Dockerビルド
 1. リポジトリのクローン
-    ```bash
+    ```
+    bash
     git clone https://github.com/sametyan9999/laravel-furima.git
     cd laravel-furima
     ```
@@ -41,13 +42,19 @@
 
 ### Laravel環境構築
 1. PHPコンテナに入る
+    ```
     docker compose exec php bash
+    ```
 
 2. 依存関係をインストール
+    ```
     composer install
+    ```
 
 3. .env ファイルを作成
+    ```
     cp .env.example .env
+    ```
 
 4. .env のDB設定を修正（Docker用に修正）
 ```
@@ -60,15 +67,23 @@ DB_PASSWORD=laravel_pass
 ```
 
 5. アプリケーションキーを生成
+    ```
     php artisan key:generate
+    ```
 
 6. マイグレーションを実行
+    ```
     php artisan migrate
+    ```
 
 7. シーディングを実行
+    ```
     php artisan db:seed
+    ```
 
-### 環境情報（Docker構成）
+    ---
+
+## 環境情報（Docker構成）
 ・nginx
 nginx:1.27-alpine
 
@@ -81,8 +96,9 @@ mysql:8.4
 ・phpMyAdmin
 phpmyadmin/phpmyadmin:latest
 
+---
 
-### 使用技術(実行環境)
+## 使用技術(実行環境)
 ・言語
 PHP 8.1
 
@@ -107,9 +123,12 @@ phpMyAdmin
 ・バージョン管理
 Git / GitHub
 
+---
+
 ## ER図
 
 
+---
 
 ## アプリケーションURL
 開発環境 : http://localhost
