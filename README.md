@@ -37,7 +37,7 @@
 
 2. コンテナをビルド・起動
     ```bash
-    docker-compose up -d --build
+    docker compose up -d --build
     ```
 ※ MySQL が OS によって起動しない場合があるので、それぞれのPCに合わせて docker-compose.yml を編集してください。
 
@@ -56,6 +56,7 @@
     ```env
     cp .env.example .env
     ```
+> ※ 本リポジトリは `src/` 配下が Laravel のルートです。`.env` は `src/.env` に作成してください。
 
 4. .env のDB設定を修正（Docker用に修正）
 ```
@@ -82,7 +83,19 @@ DB_PASSWORD=laravel_pass
     php artisan db:seed
     ```
 
-    ---
+---
+
+## テスト実行方法
+コンテナ内で以下を実行してテストを実施します。
+
+```bash
+docker compose exec php bash
+php artisan test
+```
+
+---
+
+
 
 ## 環境情報（Docker構成）
 | サービス | バージョン / イメージ | 備考 |
@@ -91,6 +104,7 @@ DB_PASSWORD=laravel_pass
 | php | php:8.1-fpm | Composer導入済 |
 | mysql | mysql:8.4 | Docker永続化設定済 |
 | phpMyAdmin | phpmyadmin/phpmyadmin:latest | 管理用GUI |
+| mailhog | mailhog/mailhog:v1.0.1 | 開発用メール確認ツール（http://localhost:8025） |
 
 ---
 
@@ -98,14 +112,25 @@ DB_PASSWORD=laravel_pass
 
 | 分類 | 技術・ライブラリ |
 |------|----------------|
-| 言語 | PHP 8.1 |
-| フレームワーク | Laravel 8.x |
+| 言語 | PHP 8.1.x |
+| フレームワーク | Laravel 8.75+ |
+| 認証 | Laravel Fortify / Laravel Sanctum |
 | データベース | MySQL 8.4 |
+| 決済 | Stripe PHP 18.x |
+| フロントエンド | Blade / jQuery 3.7.1 |
 | インフラ | Docker / Docker Compose |
-| 認証 | Laravel Fortify |
-| フロントエンド | Blade, jQuery 3.7.1 |
-| 管理ツール | phpMyAdmin |
+| テスト | PHPUnit 9.5 |
+| 管理ツール | phpMyAdmin / MailHog |
 | バージョン管理 | Git / GitHub |
+
+---
+
+#### ④ MailHog / Stripe 注意書き（「使用技術(実行環境)」の下）
+
+```md
+> 💡 **補足**
+> - メールは MailHog に送信されます（開発用URL: [http://localhost:8025](http://localhost:8025)）。
+> - Stripe は **テストキー** で動作します。提出・運用時は本番キーに差し替えてください。
 
 ---
 
@@ -114,10 +139,12 @@ DB_PASSWORD=laravel_pass
 ---
 
 ## アプリケーションURL
-開発環境 : http://localhost
+| 環境 | URL |
+|------|------|
+| 開発環境 | [http://localhost](http://localhost) |
+| phpMyAdmin | [http://localhost:8080](http://localhost:8080) |
+| MailHog | [http://localhost:8025](http://localhost:8025) |
+| ユーザー登録 | [http://localhost/register](http://localhost/register) |
+| ログイン | [http://localhost/login](http://localhost/login) |
 
-phpMyAdmin : http://localhost:8080
-
-ユーザー登録 : http://localhost/register
-
-ログイン : http://localhost/login
+© 2025 coachtechフリマ
