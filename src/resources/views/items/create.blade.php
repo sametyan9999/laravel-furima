@@ -19,7 +19,8 @@
 
       <div class="sell-image-box">
         <div class="sell-image-frame" id="image_frame" aria-live="polite">
-          <img id="image_preview_img" alt="">
+          {{-- alt を意味のある文言に（挙動は不変） --}}
+          <img id="image_preview_img" alt="選択した商品のプレビュー画像">
           <label for="image_file" class="sell-image-label" id="image_pick_btn">画像を選択する</label>
         </div>
 
@@ -38,7 +39,7 @@
     <section class="sell-section">
       <h2 class="sell-label">商品の詳細</h2>
 
-      {{-- 🔥 カテゴリー（複数選択対応） --}}
+      {{-- カテゴリー（複数選択対応） --}}
       <div class="sell-subtitle">カテゴリー</div>
       <div class="category-chip-list">
         @php

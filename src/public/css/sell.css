@@ -1,6 +1,4 @@
-/* ==============================
-   共通レイアウト
-============================== */
+/* レイアウト */
 .sell-wrapper {
     max-width: 720px;
     margin: 40px auto;
@@ -14,9 +12,7 @@
     margin-bottom: 40px;
 }
 
-/* ==============================
-   各セクション
-============================== */
+/* セクション */
 .sell-section {
     margin-bottom: 48px;
 }
@@ -29,16 +25,13 @@
     padding-bottom: 8px;
 }
 
-/* ==============================
-   商品画像アップロード（参考画像に合わせた横幅）
-============================== */
+/* 画像アップロード */
 .sell-image-box {
     display: grid;
     gap: 12px;
     justify-items: start;
 }
 
-/* 2:1の横長、ボタンは初期中央／選択後は左下へ */
 .sell-image-frame {
     position: relative;
     width: min(700px, 100%);
@@ -47,18 +40,14 @@
     border-radius: 8px;
     background: #fafafa;
     overflow: hidden;
-
-    /* 画像未選択時は中央寄せでボタンを真ん中に */
     display: grid;
     place-items: center;
 }
 
-/* 画像がある状態では中央寄せを解除（画像が全面に出る） */
 .sell-image-frame.has-image {
     place-items: normal;
 }
 
-/* プレビュー画像は枠いっぱいに表示 */
 .sell-image-frame>img {
     width: 100%;
     height: 100%;
@@ -69,13 +58,11 @@
     background: none;
 }
 
-/* ★ 画像ソースが無い（未選択）のimgは完全に非表示にする */
 .sell-image-frame>img:not([src]),
 .sell-image-frame>img[src=""] {
-    display: none !important;
+    display: none;
 }
 
-/* ボタン基本スタイル（初期は中央） */
 .sell-image-label {
     z-index: 2;
     display: inline-block;
@@ -91,7 +78,6 @@
     transition: background-color .15s ease, color .15s ease;
 }
 
-/* 画像選択後は左下に固定配置 */
 .sell-image-frame.has-image .sell-image-label {
     position: absolute;
     left: 10px;
@@ -102,9 +88,7 @@
     background: #ffe9e6;
 }
 
-/* ==============================
-   カテゴリー・状態
-============================== */
+/* カテゴリー・状態 */
 .sell-subtitle {
     font-weight: 700;
     font-size: 16px;
@@ -129,7 +113,7 @@
     color: #d66558;
     font-size: 13px;
     font-weight: 600;
-    transition: all 0.2s ease;
+    transition: all .2s ease;
 }
 
 .chip input {
@@ -147,9 +131,7 @@
     background: #ffe8e5;
 }
 
-/* ==============================
-   テキスト・フォーム
-============================== */
+/* フォーム */
 .form-group {
     margin-top: 20px;
 }
@@ -180,9 +162,7 @@ textarea {
     min-height: 100px;
 }
 
-/* ==============================
-   価格（¥と入力欄を同じ高さに）
-============================== */
+/* 価格入力（IDセレクタ回避、HTML変更不要） */
 .price-input {
     display: flex;
     align-items: stretch;
@@ -204,7 +184,8 @@ textarea {
     color: #444;
 }
 
-#price {
+/* ここを .price-input 内の number 型に変更（#price を使用しない） */
+.price-input input[type="number"] {
     flex: 1;
     border: 1px solid #cfcfcf;
     border-left: 0;
@@ -218,15 +199,13 @@ textarea {
     box-sizing: border-box;
 }
 
-#price::-webkit-outer-spin-button,
-#price::-webkit-inner-spin-button {
+.price-input input[type="number"]::-webkit-outer-spin-button,
+.price-input input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
 
-/* ==============================
-   ボタン
-============================== */
+/* ボタン */
 .form-actions {
     text-align: center;
     margin-top: 40px;
@@ -242,30 +221,25 @@ textarea {
     padding: 14px 0;
     width: 100%;
     cursor: pointer;
-    transition: opacity 0.2s ease;
+    transition: opacity .2s ease;
 }
 
 .btn-submit:hover {
-    opacity: 0.9;
+    opacity: .9;
 }
 
-/* ==============================
-   エラーメッセージ
-============================== */
+/* エラー */
 .error {
     color: #d66558;
     font-size: 13px;
     margin-top: 6px;
 }
 
-/* ==============================
-   レスポンシブ
-============================== */
+/* レスポンシブ */
 @media (max-width: 480px) {
     .sell-image-frame {
         width: 100%;
         aspect-ratio: 3 / 2;
-        /* スマホは少し縦長に */
         border-radius: 6px;
     }
 

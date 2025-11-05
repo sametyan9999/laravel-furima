@@ -1,4 +1,4 @@
-@extends('layouts.auth') {{-- ← 検索/出品の無いヘッダー版 --}}
+@extends('layouts.auth')
 @section('title','会員登録')
 
 @push('styles')
@@ -11,7 +11,6 @@
     <div class="auth-container">
       <h1 class="page-title">会員登録</h1>
 
-      {{-- ★ ブラウザの必須チェックを無効化してサーバーバリデーションを確認 --}}
       <form class="auth-form" method="post" action="{{ route('register') }}" novalidate>
         @csrf
 

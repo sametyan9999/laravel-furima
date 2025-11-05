@@ -16,13 +16,12 @@ class ItemLikeTest extends TestCase
      * @test
      * いいねアイコンを押下でいいねした商品として登録することができる
      */
-    public function いいねアイコンを押下でいいねした商品として登録することができる()
+    public function いいねアイコンを押下でいいねした商品として登録することができる(): void
     {
         $user = User::factory()->create();
         $item = Item::factory()->create();
 
-        $this->actingAs($user)
-            ->post(route('items.like', $item));
+        $this->actingAs($user)->post(route('items.like', $item));
 
         $this->assertDatabaseHas('likes', [
             'user_id' => $user->id,
@@ -34,7 +33,7 @@ class ItemLikeTest extends TestCase
      * @test
      * 追加済みのアイコンは色が変化する
      */
-    public function 追加済みのアイコンは色が変化する()
+    public function 追加済みのアイコンは色が変化する(): void
     {
         $user = User::factory()->create();
         $item = Item::factory()->create();
@@ -46,17 +45,16 @@ class ItemLikeTest extends TestCase
 
         $this->actingAs($user);
 
-        // 詳細ページで「いいね済み」スタイルが付くことを確認
         $res = $this->get(route('items.show', $item));
         $res->assertOk();
-        $res->assertSee('icon-like is-liked'); // 実装に合わせたクラス名
+        $res->assertSee('icon-like is-liked');
     }
 
     /**
      * @test
      * 再度いいねアイコンを押下でいいねを解除することができる
      */
-    public function 再度いいねアイコンを押下でいいねを解除することができる()
+    public function 再度いいねアイコンを押下でいいねを解除することができる(): void
     {
         $user = User::factory()->create();
         $item = Item::factory()->create();
@@ -66,8 +64,7 @@ class ItemLikeTest extends TestCase
             'item_id' => $item->id,
         ]);
 
-        $this->actingAs($user)
-            ->delete(route('items.unlike', $item));
+        $this->actingAs($user)->delete(route('items.unlike', $item));
 
         $this->assertDatabaseMissing('likes', [
             'user_id' => $user->id,

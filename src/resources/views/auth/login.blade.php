@@ -1,28 +1,23 @@
 @extends('layouts.app')
 @section('title','ログイン')
 
-{{-- ★ 認証ページ用ヘッダー（ロゴのみ）に差し替え --}}
 @section('header')
   @include('components.header_auth')
 @endsection
 
 @push('styles')
-  {{-- 認証共通スタイル --}}
   <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
-  {{-- ログイン専用スタイル（必要なら） --}}
   <link rel="stylesheet" href="{{ asset('css/login.css') }}">
 @endpush
 
 @section('content')
   <div class="login-page">
-    <div class="auth-container" style="margin-top:48px;">
+    <div class="auth-container">
       <h1 class="page-title">ログイン</h1>
 
-      {{-- ✅ ブラウザの自動バリデーションを無効化（novalidate追加） --}}
       <form class="auth-form" method="post" action="{{ route('login') }}" novalidate>
         @csrf
 
-        {{-- メールアドレス --}}
         <div class="form-group">
           <label for="email">メールアドレス</label>
           <input id="email"
@@ -37,7 +32,6 @@
           @enderror
         </div>
 
-        {{-- パスワード --}}
         <div class="form-group">
           <label for="password">パスワード</label>
           <input id="password"
@@ -50,12 +44,10 @@
           @enderror
         </div>
 
-        {{-- ログインボタン --}}
         <div class="form-actions">
           <button type="submit" class="btn btn-primary btn-wide">ログインする</button>
         </div>
 
-        {{-- 会員登録リンク --}}
         <p class="help-link">
           <a href="{{ route('register') }}">会員登録はこちら</a>
         </p>

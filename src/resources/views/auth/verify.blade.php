@@ -14,13 +14,11 @@
       メール内のリンクをクリックして認証を完了してください。
     </p>
 
-    {{-- ✅ テスト手順②: 「認証はこちらから」= メール認証サイトを開く（開発はMailHog） --}}
     <a href="{{ config('services.mailhog.url', 'http://localhost:8025') }}"
        target="_blank" rel="noopener" class="verify-btn">
       認証はこちらから
     </a>
 
-    {{-- 認証メールの再送 --}}
     <form method="POST" action="{{ route('verification.send') }}">
       @csrf
       <button type="submit" class="verify-resend">認証メールを再送する</button>

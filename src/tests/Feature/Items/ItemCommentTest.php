@@ -5,7 +5,6 @@ namespace Tests\Feature\Items;
 use App\Models\User;
 use App\Models\Item;
 use App\Models\Condition;
-use App\Models\Comment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,7 +16,7 @@ class ItemCommentTest extends TestCase
     {
         $condition = Condition::factory()->create(['name' => '新品']);
         return Item::factory()->create([
-            'condition_id' => $condition->id,
+            'condition_id'   => $condition->id,
             'comments_count' => 0,
         ]);
     }

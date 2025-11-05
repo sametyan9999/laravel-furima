@@ -1,9 +1,4 @@
-/* ================================
-   Auth 共通（ログイン/登録/認証メール）
-   ※ページ専用の幅や余白は各ページCSSへ
-================================ */
-
-/* コンテナの基本余白だけ共通化 */
+/* auth shared */
 .auth-container,
 .verify-container {
     max-width: 740px;
@@ -11,7 +6,6 @@
     padding: 0 20px;
 }
 
-/* タイトルの共通スタイル */
 .page-title {
     font-size: 28px;
     font-weight: 700;
@@ -19,7 +13,6 @@
     margin: 0 0 32px;
 }
 
-/* 入力 */
 .form-group {
     margin-bottom: 18px;
 }
@@ -46,7 +39,6 @@
     height: auto;
 }
 
-/* ボタン（色はサイト共通の赤） */
 .form-actions {
     margin-top: 24px;
     text-align: center;
@@ -62,7 +54,7 @@
     border: none;
     cursor: pointer;
     font-weight: 700;
-    letter-spacing: .02em;
+    letter-spacing: 0.02em;
 }
 
 .btn-wide {
@@ -70,13 +62,13 @@
 }
 
 .btn-primary {
-    background: #E85D55;
+    background: #e85d55;
     color: #fff;
 }
 
 .btn-outline {
-    border: 1px solid #E85D55;
-    color: #E85D55;
+    border: 1px solid #e85d55;
+    color: #e85d55;
     background: #fff;
 }
 
@@ -85,7 +77,6 @@
     color: #222;
 }
 
-/* 補助 */
 .error {
     color: #e64646;
     font-size: 12px;
@@ -100,10 +91,8 @@
 .help-link a {
     color: #4b66ea;
     text-decoration: none;
-    /* ← 下線を消す */
 }
 
 .help-link a:hover {
-    opacity: .8;
-    /* 任意のホバー表現（下線は出さない） */
+    opacity: 0.8;
 }

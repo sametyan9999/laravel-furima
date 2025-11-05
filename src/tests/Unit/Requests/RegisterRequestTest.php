@@ -4,6 +4,7 @@ namespace Tests\Unit\Requests;
 
 use App\Http\Requests\RegisterRequest;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Contracts\Validation\Validator as ValidatorContract;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -11,13 +12,14 @@ class RegisterRequestTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function v(array $data)
+    private function v(array $data): ValidatorContract
     {
         $r = new RegisterRequest();
-        return Validator::make($data, $r->rules(), method_exists($r,'messages') ? $r->messages() : []);
+        return Validator::make($data, $r->rules(), method_exists($r, 'messages') ? $r->messages() : []);
     }
 
-    /** @test */ public function 名前_必須()
+    /** @test */
+    public function 名前_必須(): void
     {
         $res = $this->v([
             'name' => '',
@@ -29,7 +31,8 @@ class RegisterRequestTest extends TestCase
         $this->assertArrayHasKey('name', $res->errors()->toArray());
     }
 
-    /** @test */ public function メール_必須_形式()
+    /** @test */
+    public function メール_必須_形式(): void
     {
         $bad = $this->v([
             'name' => '太郎',
@@ -50,7 +53,8 @@ class RegisterRequestTest extends TestCase
         $this->assertArrayHasKey('email', $bad2->errors()->toArray());
     }
 
-    /** @test */ public function パスワード_必須_min8_確認一致_確認必須()
+    /** @test */
+    public function パスワード_必須_min8_確認一致_確認必須(): void
     {
         // 未入力
         $res1 = $this->v([
@@ -93,7 +97,8 @@ class RegisterRequestTest extends TestCase
         $this->assertArrayHasKey('password', $res4->errors()->toArray());
     }
 
-    /** @test */ public function 正常系()
+    /** @test */
+    public function 正常系(): void
     {
         $ok = $this->v([
             'name' => '太郎',

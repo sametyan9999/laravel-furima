@@ -13,17 +13,15 @@
     text-align: center;
 }
 
-/* 見出し（参考画像準拠） */
 .verify-heading {
     font-size: 22px;
     line-height: 1.7;
     font-weight: 700;
     color: #111;
-    letter-spacing: .01em;
+    letter-spacing: 0.01em;
     margin: 0 0 32px;
 }
 
-/* 大ボタン（灰色/丸み/薄い枠） */
 .verify-btn {
     display: inline-block;
     min-width: 260px;
@@ -34,11 +32,11 @@
     background: #f1f2f4;
     border: 1px solid #d8dbe0;
     border-radius: 10px;
-    transition: box-shadow .15s ease, transform .05s ease, background .15s ease;
+    transition: box-shadow 0.15s ease, transform 0.05s ease, background 0.15s ease;
 }
 
 .verify-btn:hover {
-    box-shadow: 0 4px 14px rgba(0, 0, 0, .08);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
     background: #eceef1;
 }
 
@@ -46,7 +44,6 @@
     transform: translateY(1px);
 }
 
-/* 再送リンク（青/下線） */
 .verify-resend {
     display: inline-block;
     margin-top: 24px;
@@ -59,15 +56,13 @@
     cursor: pointer;
 }
 
-/* 送信済みフラッシュ */
 .verify-flash {
     margin-top: 12px;
     color: #16a34a;
     font-size: 14px;
 }
 
-/* SP */
-@media (max-width:480px) {
+@media (max-width: 480px) {
     .verify-heading {
         font-size: 18px;
     }

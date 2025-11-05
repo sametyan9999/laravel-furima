@@ -110,7 +110,9 @@ DB_PASSWORD=laravel_pass
 ---
 
 ## ER図
+https://drive.google.com/file/d/1kTKgabMkunb-rZardA_fQXSDJAUWdBRV/view?usp=sharing
 
+![alt text](image.png)
 ---
 
 ## アプリケーションURL

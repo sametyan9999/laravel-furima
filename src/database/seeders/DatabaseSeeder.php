@@ -13,9 +13,8 @@ class DatabaseSeeder extends Seeder
             ProfilesSeeder::class,
             ConditionsSeeder::class,
             CategoriesSeeder::class,
-            ItemsSeeder::class,
-            // CommentsSeeder::class,   // 提出用は無効化
-            // LikesSeeder::class,      // 提出用は無効化
+            ItemsSeeder::class,        // 既存のままでOK（category_idは無視される）
+            CategoryItemSeeder::class, // ← ピボット付与を最後に実行
         ]);
     }
 }

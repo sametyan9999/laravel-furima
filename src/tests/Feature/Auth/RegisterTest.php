@@ -30,7 +30,7 @@ class RegisterTest extends TestCase
     }
 
     /** @test 名前が入力されていない場合、バリデーションメッセージが表示される */
-    public function 名前未入力だとメッセージが表示される()
+    public function 名前未入力だとメッセージが表示される(): void
     {
         $res = $this->from('/register')->post('/register', $this->validPayload([
             'name' => '',
@@ -44,7 +44,7 @@ class RegisterTest extends TestCase
     }
 
     /** @test メールアドレスが入力されていない場合、バリデーションメッセージが表示される */
-    public function メール未入力だとメッセージが表示される()
+    public function メール未入力だとメッセージが表示される(): void
     {
         $res = $this->from('/register')->post('/register', $this->validPayload([
             'email' => '',
@@ -58,7 +58,7 @@ class RegisterTest extends TestCase
     }
 
     /** @test パスワードが入力されていない場合、バリデーションメッセージが表示される */
-    public function パスワード未入力だとメッセージが表示される()
+    public function パスワード未入力だとメッセージが表示される(): void
     {
         $res = $this->from('/register')->post('/register', $this->validPayload([
             'password' => '',
@@ -73,7 +73,7 @@ class RegisterTest extends TestCase
     }
 
     /** @test パスワードが7文字以下の場合、バリデーションメッセージが表示される */
-    public function パスワードが7文字以下だとメッセージが表示される()
+    public function パスワードが7文字以下だとメッセージが表示される(): void
     {
         $res = $this->from('/register')->post('/register', $this->validPayload([
             'password' => '1234567',
@@ -88,7 +88,7 @@ class RegisterTest extends TestCase
     }
 
     /** @test パスワードが確認用と一致しない場合、バリデーションメッセージが表示される */
-    public function パスワード不一致だとメッセージが表示される()
+    public function パスワード不一致だとメッセージが表示される(): void
     {
         $res = $this->from('/register')->post('/register', $this->validPayload([
             'password_confirmation' => 'mismatch123',
@@ -105,7 +105,7 @@ class RegisterTest extends TestCase
      * @test
      * 全ての項目が正しければ会員登録され、プロフィール設定画面に遷移する
      */
-    public function 正常登録でプロフィール設定画面へリダイレクト()
+    public function 正常登録でプロフィール設定画面へリダイレクト(): void
     {
         $res = $this->post('/register', $this->validPayload());
 

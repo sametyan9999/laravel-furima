@@ -15,12 +15,10 @@ class PasswordResetTest extends TestCase
 
     private const REQUEST_GET  = '/forgot-password';
     private const REQUEST_POST = '/forgot-password';
-    // ビューを作らない方針なので RESET_GET は使わない
-    // private const RESET_GET    = '/reset-password/{token}';
     private const RESET_POST   = '/reset-password';
 
     /** @test */
-    public function 再設定メールを要求できる()
+    public function 再設定メールを要求できる(): void
     {
         Notification::fake();
 
@@ -38,7 +36,7 @@ class PasswordResetTest extends TestCase
     }
 
     /** @test */
-    public function トークンでパスワードを再設定できる()
+    public function トークンでパスワードを再設定できる(): void
     {
         Notification::fake();
 

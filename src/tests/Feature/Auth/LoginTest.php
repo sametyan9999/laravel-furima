@@ -11,7 +11,7 @@ class LoginTest extends TestCase
     use RefreshDatabase;
 
     /** @test メール未入力だとバリデーションメッセージが表示される */
-    public function メール未入力だとバリデーションメッセージが表示される()
+    public function メール未入力だとバリデーションメッセージが表示される(): void
     {
         $response = $this->post('/login', [
             'email'    => '',
@@ -24,7 +24,7 @@ class LoginTest extends TestCase
     }
 
     /** @test パスワード未入力だとバリデーションメッセージが表示される */
-    public function パスワード未入力だとバリデーションメッセージが表示される()
+    public function パスワード未入力だとバリデーションメッセージが表示される(): void
     {
         $response = $this->post('/login', [
             'email'    => 'test@example.com',
@@ -37,7 +37,7 @@ class LoginTest extends TestCase
     }
 
     /** @test 誤った情報の場合バリデーションメッセージが表示される */
-    public function 誤った情報の場合バリデーションメッセージが表示される()
+    public function 誤った情報の場合バリデーションメッセージが表示される(): void
     {
         // 正しいユーザーはいるが、誤ったパスワードで試行
         User::factory()->create([
@@ -57,7 +57,7 @@ class LoginTest extends TestCase
     }
 
     /** @test 正しい情報が入力された場合ログインできる */
-    public function 正しい情報が入力された場合ログインできる()
+    public function 正しい情報が入力された場合ログインできる(): void
     {
         $user = User::factory()->create([
             'email'    => 'user@example.com',

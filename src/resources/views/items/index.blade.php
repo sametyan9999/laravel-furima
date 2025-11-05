@@ -26,9 +26,11 @@
       @if($item->user_id !== auth()->id())
         <a href="{{ route('items.show', $item) }}" class="card">
           <div class="card__thumb">
-            {{-- ✅ 画像はアクセサを利用 --}}
-            <img src="{{ $item->image_url ?? '/images/noimage.png' }}" alt="{{ $item->name }}">
-            {{-- ✅ 売済み判定：status か purchases 存在（is_sold） --}}
+            {{-- 画像はアクセサを利用。noimageは asset() に統一 + 遅延読み込み --}}
+            <img src="{{ $item->image_url ?? asset('images/noimage.png') }}"
+                 alt="{{ $item->name }}"
+                 loading="lazy">
+            {{-- 売済み判定：status か purchases 存在（is_sold） --}}
             @if(($item->status ?? null) === 'sold' || ($item->is_sold ?? false))
               <span class="card__badge">Sold</span>
             @endif

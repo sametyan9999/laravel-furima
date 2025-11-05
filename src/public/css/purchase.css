@@ -1,20 +1,15 @@
-/* ============================
-   購入ページ 全体レイアウト（幅・余白を拡大）
-============================ */
+/* 購入ページ */
 .purchase {
     max-width: 1120px;
     margin: 32px auto;
     padding: 0 24px;
-
     display: grid;
     grid-template-columns: minmax(0, 1fr) 420px;
     gap: 48px;
     align-items: start;
 }
 
-/* ============================
-   商品情報（左カラム）
-============================ */
+/* 商品情報（左） */
 .purchase__item {
     display: flex;
     gap: 20px;
@@ -48,7 +43,6 @@
     margin-top: 36px;
 }
 
-/* 見出し＋右側アクション（「変更する」） */
 .section-head {
     display: flex;
     justify-content: space-between;
@@ -74,10 +68,10 @@
     margin: 0 0 12px 0;
 }
 
-/* セレクト等 */
-select,
-input[type="text"],
-input[type="number"] {
+/* フォーム要素（スコープ限定） */
+.purchase select,
+.purchase input[type="text"],
+.purchase input[type="number"] {
     width: 100%;
     height: 44px;
     border: 1px solid #cfcfcf;
@@ -87,7 +81,7 @@ input[type="number"] {
     font-size: 15px;
 }
 
-/* 配送先ボックス（行ごとに積む） */
+/* 住所表示 */
 .address-box {
     padding: 16px 20px;
     border: 1px solid #e5e5e5;
@@ -101,10 +95,7 @@ input[type="number"] {
     margin: 2px 0;
 }
 
-/* ============================
-   右カラム（サマリー）
-   角は尖らせ・縦線なし・中央の横線のみ
-============================ */
+/* 右カラム（サマリー） */
 .purchase__summary {
     position: sticky;
     top: 80px;
@@ -115,7 +106,6 @@ input[type="number"] {
     border-collapse: separate;
     border-spacing: 0;
     border: 1px solid #cfcfcf;
-    /* 外枠だけ */
     border-radius: 0;
     background: #fff;
     margin-bottom: 24px;
@@ -125,7 +115,6 @@ input[type="number"] {
 .summary td {
     padding: 20px 24px;
     border: 0;
-    /* ← 縦線/セル線を完全に消す */
     text-align: left;
     font-size: 16px;
     font-weight: 700;
@@ -133,18 +122,15 @@ input[type="number"] {
     vertical-align: middle;
 }
 
-/* 真ん中の境界線だけを描く（“商品代金”行の下） */
 .summary tr+tr th,
 .summary tr+tr td {
     border-top: 1px solid #cfcfcf;
 }
 
-/* ============================
-   購入ボタン（参考画像の赤）
-============================ */
-.gt-btn--buy {
-    background-color: #D66558 !important;
-    color: #fff !important;
+/* 購入ボタン */
+.purchase .gt-btn--buy {
+    background-color: var(--primary);
+    color: #fff;
     font-weight: 700;
     font-size: 16px;
     border: none;
@@ -155,18 +141,16 @@ input[type="number"] {
     width: 100%;
 }
 
-.gt-btn--buy:hover {
-    opacity: 0.9;
+.purchase .gt-btn--buy:hover {
+    opacity: .9;
 }
 
-.gt-btn--buy:disabled {
-    background-color: #cfcfcf !important;
+.purchase .gt-btn--buy:disabled {
+    background-color: #cfcfcf;
     cursor: not-allowed;
 }
 
-/* ============================
-   ユーティリティ
-============================ */
+/* ユーティリティ */
 .w-100 {
     width: 100%;
 }
@@ -175,9 +159,7 @@ input[type="number"] {
     margin-top: 16px;
 }
 
-/* ============================
-   レスポンシブ
-============================ */
+/* レスポンシブ */
 @media (max-width: 1024px) {
     .purchase {
         grid-template-columns: 1fr;

@@ -12,7 +12,7 @@
       @if($item->image)
         <img class="detail__image" src="{{ $item->image }}" alt="{{ $item->name }}">
       @endif
-      {{-- ✅ 詳細でも sold を表示 --}}
+      {{-- 詳細でも sold を表示 --}}
       @if(($item->status ?? null) === 'sold')
         <span class="card__badge" aria-label="売り切れ">Sold</span>
       @endif
@@ -29,7 +29,7 @@
 
     <div class="detail__icons" aria-label="ステータス">
       @auth
-        {{-- ✅ いいねトグル：未いいね→POST /like、いいね済み→DELETE /unlike --}}
+        {{-- いいねトグル：未いいね→POST /like、いいね済み→DELETE /unlike --}}
         @if($liked)
           <form method="POST" action="{{ route('items.unlike', $item) }}" style="display:inline;">
             @csrf
@@ -57,7 +57,7 @@
       <small class="ml-8">{{ $item->comments_count }}</small>
     </div>
 
-    {{-- ✅ sold のときは購入不可 --}}
+    {{-- sold のときは購入不可 --}}
     @if(($item->status ?? null) === 'sold')
       <button class="gt-btn gt-btn--buy mt-16" disabled>売り切れ</button>
     @else
@@ -92,7 +92,7 @@
     <section class="detail__section">
       <h2>コメント（{{ $comments->count() }}）</h2>
 
-      {{-- ✅ コメントがある場合のみ表示 --}}
+      {{-- コメントがある場合のみ表示 --}}
       @foreach($comments as $c)
         <div class="comment">
           <div class="avatar"></div>
@@ -103,7 +103,7 @@
         <div class="comment__bubble">{{ $c->body }}</div>
       @endforeach
 
-      {{-- ✅ コメント投稿フォーム --}}
+      {{-- コメント投稿フォーム --}}
       <form method="POST" action="{{ route('items.comments.store', $item) }}" class="mt-16" novalidate>
         @csrf
         <label for="comment-body" class="mb-8 d-block">商品へのコメント</label>

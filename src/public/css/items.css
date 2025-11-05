@@ -1,13 +1,4 @@
-/* =========================
-基本変数（未定義時の保険）
-========================= */
-:root {
-    --primary: #e06359;
-    --muted: #777;
-    --like-yellow: #ffd54d;
-}
-
-/* tabs（一覧） */
+/* tabs */
 .tab {
     display: flex;
     gap: 24px;
@@ -25,7 +16,7 @@
     border-bottom: 2px solid var(--primary);
 }
 
-/* grid / card（一覧） */
+/* grid / card */
 .grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -34,6 +25,7 @@
 }
 
 .card__thumb {
+    position: relative;
     aspect-ratio: 1/1;
     background: #eee;
     border: 1px solid #e9e9e9;
@@ -52,7 +44,7 @@
     color: #444;
 }
 
-/* detail（詳細） */
+/* detail */
 .detail {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -60,7 +52,6 @@
     margin-top: 24px;
 }
 
-/* 画像ラッパー（SOLD位置決め用に relative） */
 .detail__image-wrap {
     position: relative;
     overflow: hidden;
@@ -109,7 +100,7 @@
     margin: 24px 0 8px;
 }
 
-/* chips（詳細：カテゴリ用） */
+/* chips */
 .chips {
     display: flex;
     gap: 8px;
@@ -125,7 +116,7 @@
     border: 1px solid #e6e6e6;
 }
 
-/* コメント（詳細） */
+/* comments */
 .comment {
     display: flex;
     align-items: center;
@@ -152,7 +143,7 @@
     color: #333;
 }
 
-/* 購入・コメント送信ボタン（同色） */
+/* actions */
 .gt-btn--buy,
 .gt-btn--comment {
     background: var(--primary);
@@ -182,33 +173,43 @@
     box-shadow: 0 0 0 3px rgba(224, 99, 89, .25);
 }
 
-/* いいね星：未押下＝外枠黒、押下＝黄色塗り */
+/* ==============================
+   いいねアイコン
+============================== */
 .icon-like {
     font-size: 24px;
     color: transparent;
-    -webkit-text-stroke: 1.5px #000;
+    /* 塗りなし（中は透明） */
+    -webkit-text-stroke: 2px #888;
+    /* 外枠をグレー */
     background: none;
     border: none;
     cursor: pointer;
-    transition: color .2s ease, opacity .2s ease, transform .05s ease;
+    transition: color .25s ease, -webkit-text-stroke .25s ease, transform .05s ease;
     line-height: 1;
     vertical-align: middle;
 }
 
+/* いいね済み（星を黄色に） */
 .icon-like.is-liked {
-    color: var(--like-yellow);
-    -webkit-text-stroke: 1.5px var(--like-yellow);
+    color: #FFD700;
+    /* 黄色塗りつぶし */
+    -webkit-text-stroke: 2px #FFD700;
+    /* 枠も黄色 */
 }
 
+/* hover時の少し明るい演出 */
 .icon-like:hover {
-    opacity: .85;
+    opacity: 0.8;
+    transform: scale(1.05);
 }
 
+/* 押したときの軽い沈み */
 .icon-like:active {
-    transform: translateY(1px);
+    transform: scale(0.95);
 }
 
-/* 情報の行（ラベルと値） */
+/* info row */
 .detail-kv {
     display: flex;
     align-items: center;
@@ -226,14 +227,7 @@
     flex: 1;
 }
 
-/* =========================
-   SOLD バッジ（一覧＆詳細共通）
-========================= */
-.card__thumb {
-    position: relative;
-    overflow: hidden;
-}
-
+/* SOLD badge */
 .card__badge {
     position: absolute;
     top: 50%;
@@ -253,9 +247,7 @@
     text-shadow: 2px 2px 6px rgba(0, 0, 0, .5);
 }
 
-/* =========================
-   レスポンシブ
-========================= */
+/* responsive */
 @media (max-width: 1024px) {
     .grid {
         grid-template-columns: repeat(3, 1fr);
@@ -304,11 +296,8 @@
     }
 }
 
-/* =========================
-   バリデーションエラーメッセージ
-========================= */
+/* validation helper */
 .muted.mt-8 {
     color: #e60000;
-    /* 鮮やかな赤 */
     font-weight: 600;
 }
