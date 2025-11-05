@@ -125,7 +125,7 @@ php artisan test
 
 ---
 
-#### ④ MailHog / Stripe 注意書き（「使用技術(実行環境)」の下）
+#### ④ MailHog / Stripe 注意書き
 
 ```md
 > 💡 **補足**
