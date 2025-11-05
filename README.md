@@ -131,7 +131,7 @@ php artisan test
 > 💡 **補足**
 > - メールは MailHog に送信されます（開発用URL: [http://localhost:8025](http://localhost:8025)）。
 > - Stripe は **テストキー** で動作します。提出・運用時は本番キーに差し替えてください。
-
+```
 ---
 
 ## ER図
