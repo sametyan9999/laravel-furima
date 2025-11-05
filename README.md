@@ -99,7 +99,7 @@ DB_PASSWORD=laravel_pass
 | 分類 | 技術・ライブラリ |
 |------|----------------|
 | 言語 | PHP 8.1 |
-| フレームワーク | Laravel 10.x |
+| フレームワーク | Laravel 8.x |
 | データベース | MySQL 8.4 |
 | インフラ | Docker / Docker Compose |
 | 認証 | Laravel Fortify |

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Database\Factories;
 
@@ -7,14 +8,11 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class ItemImageFactory extends Factory
 {
     /**
-     * Define the model's default state.
-     *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function definition()
+    public function definition(): array
     {
-        return [
-            //
-        ];
+        // 使っていない場合もYAGNIに反しない最小スケルトンを維持
+        return [];
     }
 }

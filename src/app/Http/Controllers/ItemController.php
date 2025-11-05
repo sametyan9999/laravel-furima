@@ -15,13 +15,59 @@ class ItemController extends Controller
     public function __construct()
     {
         $this->middleware('auth')->only([
-            'mylist', 'create', 'store', 'storeComment',
-            'like', 'unlike',
+            'mylist', 'create', 'store', 'storeComment', 'like', 'unlike',
         ]);
     }
 
     /** トップ（商品一覧：おすすめ/マイリスト切替） */
     public function index(Request $request)
+    {
+        $keyword = $this->manageSearchSession($request);
+        $tab = (string) $request->query('tab', 'recommend');
+        $categoryId = $this->parseCategoryId($request);
+
+        if ($tab === 'mylist' && !Auth::check()) {
+            return redirect('/login');
+        }
+
+        if ($tab === 'mylist') {
+            $items = $this->getMylistItems($keyword, $categoryId);
+            // ✅ /?tab=mylist では専用ビューを返す（テスト: 見出し「いいね済み商品」を期待）
+            return view('items.mylist', [
+                'items'    => $items,
+                'keyword'  => $keyword,
+                'tab'      => 'mylist',
+                'category' => $categoryId,
+            ]);
+        }
+
+        $items = $this->getRecommendItems($keyword, $categoryId);
+
+        return view('items.index', [
+            'items'    => $items,
+            'keyword'  => $keyword,
+            'tab'      => 'recommend',
+            'category' => $categoryId,
+        ]);
+    }
+
+    /** マイリスト（/items/mylist 用：テストが直接叩く） */
+    public function mylist(Request $request)
+    {
+        $keyword    = (string) $request->query('q', session('q'));
+        $categoryId = $this->parseCategoryId($request);
+        $items      = $this->getMylistItems($keyword, $categoryId);
+
+        return view('items.mylist', [
+            'items'    => $items,
+            'keyword'  => $keyword,
+            'tab'      => 'mylist',
+            'category' => $categoryId,
+        ]);
+    }
+
+    /** 検索セッション管理 */
+    private function manageSearchSession(Request $request): ?string
     {
         if ($request->boolean('reset')) {
             session()->forget('q');
@@ -30,96 +76,52 @@ class ItemController extends Controller
         } elseif ($request->filled('keyword')) {
             session(['q' => $request->query('keyword')]);
         }
-        $keyword = session('q');
-        $tab = (string) $request->query('tab', 'recommend');
+        return session('q');
+    }
 
-        $category = ($request->filled('category') && is_numeric($request->query('category')))
+    /** カテゴリIDをパース */
+    private function parseCategoryId(Request $request): ?int
+    {
+        return ($request->filled('category') && is_numeric($request->query('category')))
             ? (int) $request->query('category')
             : null;
+    }
 
-        if ($tab === 'mylist' && !Auth::check()) {
-            return redirect('/login');
-        }
-
-        if ($tab === 'mylist') {
-            $items = Auth::user()
-                ->likedItems()
-                ->select('items.*')
-                ->when($keyword, function ($q, $kw) {
-                    $q->where(function ($qq) use ($kw) {
-                        $qq->where('items.name', 'like', "%{$kw}%")
-                           ->orWhere('items.brand', 'like', "%{$kw}%")
-                           ->orWhere('items.description', 'like', "%{$kw}%");
-                    });
-                })
-                ->when(!is_null($category), function ($q) use ($category) {
-                    $q->whereHas('categories', fn ($qq) => $qq->where('categories.id', (int)$category));
-                })
-                ->orderByRaw("CASE WHEN items.status='on_sale' THEN 0 ELSE 1 END")
-                ->orderBy('items.created_at', 'desc')
-                ->paginate(12)
-                ->withQueryString();
-
-            return view('items.mylist', [
-                'items'    => $items,
-                'keyword'  => $keyword,
-                'tab'      => 'mylist',
-                'category' => $category,
-            ]);
-        }
-
-        $items = Item::query()
-            ->when($keyword, function ($q, $kw) {
-                $q->where(function ($qq) use ($kw) {
-                    $qq->where('name', 'like', "%{$kw}%")
-                       ->orWhere('brand', 'like', "%{$kw}%")
-                       ->orWhere('description', 'like', "%{$kw}%");
-                });
-            })
-            ->when(Auth::check(), fn ($q) => $q->where('user_id', '!=', Auth::id()))
-            ->when(!is_null($category), function ($q) use ($category) {
-                $q->whereHas('categories', fn ($qq) => $qq->where('categories.id', (int)$category));
-            })
+    /** おすすめ商品一覧取得 */
+    private function getRecommendItems(?string $keyword, ?int $categoryId)
+    {
+        return Item::query()
+            ->when($keyword, fn($q) => $this->applyKeywordFilter($q, $keyword))
+            ->when(Auth::check(), fn($q) => $q->where('user_id', '!=', Auth::id()))
+            ->when($categoryId, fn($q) => $q->whereHas('categories', fn($qq) => $qq->where('categories.id', $categoryId)))
             ->orderByRaw("CASE WHEN status='on_sale' THEN 0 ELSE 1 END")
             ->latest()
             ->paginate(12)
             ->withQueryString();
-
-        return view('items.index', compact('items', 'keyword', 'tab', 'category'));
     }
 
-    /** マイリスト（/mylist 専用） */
-    public function mylist(Request $request)
+    /** マイリスト商品一覧取得 */
+    private function getMylistItems(?string $keyword, ?int $categoryId)
     {
-        $keyword = (string) $request->query('q', session('q'));
-        $category = ($request->filled('category') && is_numeric($request->query('category')))
-            ? (int) $request->query('category')
-            : null;
-
-        $items = auth()->user()
+        return Auth::user()
             ->likedItems()
             ->select('items.*')
-            ->when($keyword, function ($q, $kw) {
-                $q->where(function ($qq) use ($kw) {
-                    $qq->where('items.name', 'like', "%{$kw}%")
-                       ->orWhere('items.brand', 'like', "%{$kw}%")
-                       ->orWhere('items.description', 'like', "%{$kw}%");
-                });
-            })
-            ->when(!is_null($category), function ($q) use ($category) {
-                $q->whereHas('categories', fn ($qq) => $qq->where('categories.id', (int)$category));
-            })
+            ->when($keyword, fn($q) => $this->applyKeywordFilter($q, $keyword, 'items.'))
+            ->when($categoryId, fn($q) => $q->whereHas('categories', fn($qq) => $qq->where('categories.id', $categoryId)))
             ->orderByRaw("CASE WHEN items.status='on_sale' THEN 0 ELSE 1 END")
             ->orderBy('items.created_at', 'desc')
             ->paginate(12)
             ->withQueryString();
+    }
 
-        return view('items.mylist', [
-            'items'    => $items,
-            'keyword'  => $keyword,
-            'tab'      => 'mylist',
-            'category' => $category,
-        ]);
+    /** キーワード検索適用 */
+    private function applyKeywordFilter($query, string $keyword, string $prefix = '')
+    {
+        $query->where(function ($q) use ($keyword, $prefix) {
+            $q->where("{$prefix}name", 'like', "%{$keyword}%")
+              ->orWhere("{$prefix}brand", 'like', "%{$keyword}%")
+              ->orWhere("{$prefix}description", 'like', "%{$keyword}%");
+        });
     }
 
     /** 商品詳細 */
@@ -127,11 +129,11 @@ class ItemController extends Controller
     {
         $item->load([
             'categories',
-            'comments' => fn ($q) => $q->latest()->with('user:id,name'),
+            'comments' => fn($q) => $q->latest()->with('user:id,name'),
         ]);
 
-        $liked = auth()->check()
-            ? Like::where('user_id', auth()->id())->where('item_id', $item->id)->exists()
+        $liked = Auth::check()
+            ? Like::where('user_id', Auth::id())->where('item_id', $item->id)->exists()
             : false;
 
         return view('items.show', [
@@ -154,38 +156,29 @@ class ItemController extends Controller
      * 出品登録
      * - items.category_id（代表カテゴリ）にも保存
      * - 多対多（category_item）にも保存
-     * - 入力は `category_id`（単数）/`category_ids[]`（複数）の両対応
      */
     public function store(ExhibitionRequest $request)
     {
         $data = $request->validated();
 
-        // 画像: フォーム名の差異に両対応（image_file / image）
-        $file = $request->file('image_file') ?? $request->file('image');
-        $path = $file ? $file->store('items', 'public') : null;
-        $imageUrl = $path ? Storage::url($path) : '/storage/items/sample.jpg';
+        // 画像
+        $file    = $request->file('image_file') ?? $request->file('image');
+        $path    = $file ? $file->store('items', 'public') : null;
+        $imageUrl= $path ? Storage::url($path) : '/storage/items/sample.jpg';
 
         return DB::transaction(function () use ($request, $data, $imageUrl) {
             // 代表カテゴリ決定
-            $ids = $data['category_ids'] ?? null;
-            if (is_null($ids) && isset($data['category_id'])) {
-                $ids = [$data['category_id']];
+            $ids = $data['category_ids'] ?? [$data['category_id'] ?? null];
+            $ids = collect($ids)->filter()->unique()->values()->all();
+            if (empty($ids)) {
+                $ids = [(int) Category::orderBy('id')->value('id')];
             }
-            if (is_null($ids) && $request->filled('category_id')) {
-                $ids = [(int) $request->input('category_id')];
-            }
-            if (is_null($ids) && is_array($request->input('category_ids'))) {
-                $ids = $request->input('category_ids');
-            }
-            if (!$ids) {
-                $ids = [ (int) Category::orderBy('id')->value('id') ];
-            }
-            $ids = collect($ids)->map(fn($v)=>(int)$v)->filter()->unique()->values()->all();
+            $ids = array_map('intval', $ids);
             $primaryCategoryId = $ids[0];
 
             // Item 作成（代表カテゴリも保存）
             $item = Item::create([
-                'user_id'      => auth()->id(),
+                'user_id'      => Auth::id(),
                 'condition_id' => $data['condition_id'],
                 'category_id'  => $primaryCategoryId,
                 'name'         => $data['name'],
@@ -203,10 +196,10 @@ class ItemController extends Controller
         });
     }
 
-    /** いいね追加（POST /items/{item}/like） */
+    /** いいね追加 */
     public function like(Item $item)
     {
-        $userId = auth()->id();
+        $userId = Auth::id();
 
         DB::transaction(function () use ($item, $userId) {
             if (! $item->likes()->where('user_id', $userId)->exists()) {
@@ -220,10 +213,10 @@ class ItemController extends Controller
         return back();
     }
 
-    /** いいね解除（DELETE /items/{item}/unlike） */
+    /** いいね解除 */
     public function unlike(Item $item)
     {
-        $userId = auth()->id();
+        $userId = Auth::id();
 
         DB::transaction(function () use ($item, $userId) {
             $deleted = $item->likes()->where('user_id', $userId)->delete();
@@ -242,7 +235,7 @@ class ItemController extends Controller
 
         DB::transaction(function () use ($validated, $item) {
             Comment::create([
-                'user_id' => auth()->id(),
+                'user_id' => Auth::id(),
                 'item_id' => $item->id,
                 'body'    => $validated['body'],
             ]);

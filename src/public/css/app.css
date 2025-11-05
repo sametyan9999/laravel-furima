@@ -271,65 +271,9 @@ label {
     display: block
 }
 
-/* purchase */
-.purchase {
-    display: grid;
-    grid-template-columns: 1fr 360px;
-    gap: 40px;
-    margin-top: 24px
-}
-
-.purchase__item {
-    display: flex;
-    gap: 12px;
-    align-items: center
-}
-
-.purchase__thumb {
-    width: 100px;
-    height: 100px;
-    background: #eee;
-    border-radius: 6px;
-    object-fit: cover
-}
-
-.summary {
-    width: 100%;
-    border-collapse: collapse
-}
-
-.summary th,
-.summary td {
-    padding: 10px;
-    border: 1px solid #eee;
-    text-align: left
-}
-
-.address-box {
-    padding: 12px;
-    border: 1px solid #eee;
-    border-radius: 6px;
-    background: #fafafa
-}
-
-/* mypage */
-.mypage-head {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-top: 16px
-}
-
-.mypage-head__name {
-    font-size: 20px;
-    font-weight: 600
-}
-
 /* ===================================================== */
-/* ヘッダー右側3つのデザイン指定                         */
+/* ヘッダー右側：ログイン・マイページ・出品              */
 /* ===================================================== */
-
-/* ログイン・マイページ（白文字リンク） */
 .gt-link {
     color: #fff !important;
     background: transparent !important;
@@ -348,7 +292,7 @@ label {
     opacity: .8
 }
 
-/* 出品ボタン（白背景・黒文字） */
+/* 出品ボタン（マイページ右隣） */
 .gt-btn--sell {
     background: #fff !important;
     color: #000 !important;
@@ -372,122 +316,113 @@ label {
     transform: translateY(1px)
 }
 
-/* ===== 詳細ページ調整 ===== */
-.detail__title {
-    font-size: 28px;
-    margin: 0 0 4px;
+/* ===================================================== */
+/* レスポンシブ対応                                      */
+/* ===================================================== */
+
+/* Header（スマホ時：1行でナビを維持） */
+@media (max-width: 600px) {
+    .gt-header__inner {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        height: auto;
+        padding: 8px 0;
+    }
+
+    .gt-search {
+        order: 2;
+        width: 100%;
+    }
+
+    .gt-nav {
+        order: 3;
+        display: flex;
+        flex-wrap: nowrap;
+        /* ←折り返さない */
+        align-items: center;
+        justify-content: flex-start;
+        gap: 8px;
+    }
+
+    .gt-nav .gt-link,
+    .gt-nav .gt-btn--sell {
+        height: 36px;
+        padding: 0 10px;
+        font-size: 14px;
+    }
+
+    .gt-btn--sell {
+        width: auto;
+        min-width: auto;
+    }
 }
 
-.detail__brand {
-    color: var(--muted);
-    font-size: 13px;
-    margin-bottom: 8px;
+/* 狭い端末用 */
+@media (max-width: 380px) {
+    .gt-nav {
+        gap: 6px;
+    }
+
+    .gt-nav .gt-link,
+    .gt-nav .gt-btn--sell {
+        font-size: 13px;
+        padding: 0 8px;
+    }
 }
 
-.detail__price {
-    font-size: 26px;
-    font-weight: 600;
-    margin-top: 6px;
+/* ======= Items grid responsive ======= */
+.grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 24px;
 }
 
-.detail__price small {
-    font-weight: 400;
-    color: var(--muted);
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 20px;
+    }
 }
 
-.detail__icons {
+@media (max-width: 480px) {
+    .grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+
+/* 画像はみ出し防止 */
+html,
+body {
+    overflow-x: hidden;
+}
+
+.card__thumb {
+    aspect-ratio: 1/1;
+    overflow: hidden;
+}
+
+.card__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* 右上ナビ */
+.gt-nav {
+    margin-left: auto;
     display: flex;
     align-items: center;
-    color: var(--muted);
-    margin-top: 8px;
+    gap: 16px;
+    padding-right: 12px;
 }
 
-.ml-8 {
+.gt-search {
+    flex: 1;
+    padding: 0 8px;
+}
+
+.gt-logo {
     margin-left: 8px;
-}
-
-.ml-16 {
-    margin-left: 16px;
-}
-
-.detail__section h2 {
-    font-size: 20px;
-    margin: 24px 0 8px;
-}
-
-.comment {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 12px;
-}
-
-.avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: #ddd;
-}
-
-.comment__name {
-    font-weight: 600;
-}
-
-.comment__bubble {
-    background: #f1f3f5;
-    border-radius: 6px;
-    padding: 10px;
-    margin: 8px 0 12px 44px;
-    color: #333;
-}
-
-.muted {
-    color: var(--muted);
-}
-
-/* ===== 購入・コメント送信ボタン 共通色 ===== */
-.gt-btn--buy,
-.gt-btn--comment {
-    background: #E85D55;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    height: 44px;
-    min-width: 160px;
-    font-weight: 700;
-    letter-spacing: .03em;
-    transition: background .2s ease, transform .1s ease;
-}
-
-.gt-btn--buy:hover,
-.gt-btn--comment:hover {
-    background: #d24f48;
-}
-
-.gt-btn--buy:active,
-.gt-btn--comment:active {
-    transform: translateY(1px);
-}
-
-/* Likeボタン */
-.icon-like {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border: none;
-    background: transparent;
-    font-size: 20px;
-    color: #888;
-    cursor: pointer;
-    transition: color .2s ease;
-}
-
-.icon-like.is-liked {
-    color: var(--primary);
-}
-
-.icon-like:hover {
-    color: #555;
 }

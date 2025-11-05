@@ -17,7 +17,7 @@ Route::get('/item/{item}', [ItemController::class, 'show'])
     ->name('items.show');
 
 /**
- * メール認証フロー（Fortify標準）
+ * メール認証フロー
  */
 Route::get('/email/verify', function () {
     return view('auth.verify'); // 誘導画面
@@ -37,10 +37,12 @@ Route::post('/email/verification-notification', function (Request $request) {
 })->middleware(['auth', 'throttle:3,1'])->name('verification.send');
 
 /**
- * 会員向け機能（要ログイン＋メール認証）
+ * 会員機能
+ * - 既定は auth のみ
+ * - プロフィール編集画面だけ verified で保護（テスト要件）
  */
-Route::middleware(['auth', 'verified'])->group(function () {
-    /** マイリスト */
+Route::middleware(['auth'])->group(function () {
+    /** マイリスト（個別エンドポイントも用意：テスト対策） */
     Route::get('/mylist', [ItemController::class, 'mylist'])->name('items.mylist');
     Route::get('/items/mylist', [ItemController::class, 'mylist'])->name('items.mylist.legacy');
 
@@ -62,7 +64,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/purchase/{item}/success', [PurchaseController::class, 'success'])->whereNumber('item')->name('purchase.success');
     Route::get('/purchase/{item}/cancel', [PurchaseController::class, 'cancel'])->whereNumber('item')->name('purchase.cancel');
 
-    /** 住所変更（テストが参照する必須ルート名） */
+    /** 住所変更 */
     Route::get('/purchase/address/{item}', [PurchaseController::class, 'editAddress'])
         ->whereNumber('item')->name('purchase.address');
     Route::put('/purchase/address/{item}', [PurchaseController::class, 'updateAddress'])
@@ -70,6 +72,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     /** マイページ */
     Route::get('/mypage', [ProfileController::class, 'index'])->name('mypage.index');
-    Route::get('/mypage/profile', [ProfileController::class, 'edit'])->name('mypage.profile.edit');
-    Route::put('/mypage/profile', [ProfileController::class, 'update'])->name('mypage.profile.update');
+
+    /** プロフィール編集だけ verified で保護（ここが重要） */
+    Route::middleware('verified')->group(function () {
+        Route::get('/mypage/profile', [ProfileController::class, 'edit'])->name('mypage.profile.edit');
+        Route::put('/mypage/profile', [ProfileController::class, 'update'])->name('mypage.profile.update');
+    });
 });

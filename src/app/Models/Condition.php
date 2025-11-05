@@ -9,7 +9,7 @@ class Condition extends Model
 {
     use HasFactory;
 
-    // ✅ テーブルに timestamps が無いので自動更新を無効化
+    //テーブルに timestamps が無いので自動更新を無効化
     public $timestamps = false;
 
     protected $fillable = ['name'];

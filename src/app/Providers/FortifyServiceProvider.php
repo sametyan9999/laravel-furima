@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Providers;
 
@@ -19,18 +20,11 @@ use Laravel\Fortify\Contracts\ResetPasswordViewResponse;
 use Laravel\Fortify\Contracts\TwoFactorChallengeViewResponse;
 use Laravel\Fortify\Contracts\VerifyEmailViewResponse;
 
-// ★ 新規追加：登録後のリダイレクト制御用
-use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
-use App\Http\Responses\RegisterResponse;
-
 class FortifyServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        /**
-         * ====== 重要：View Response を明示バインド ======
-         * 環境によって自動解決できないケースを潰します。
-         */
+        // ====== 重要：View Response を明示バインド ======
         $this->app->singleton(LoginViewResponse::class, function () {
             return new class implements LoginViewResponse {
                 public function toResponse($request)
@@ -76,7 +70,7 @@ class FortifyServiceProvider extends ServiceProvider
             };
         });
 
-        // 2FAを使うなら（config/fortify.phpで有効な時のみ実際に到達）
+        // 2FA を使う場合のみ実行される
         $this->app->singleton(TwoFactorChallengeViewResponse::class, function () {
             return new class implements TwoFactorChallengeViewResponse {
                 public function toResponse($request)
@@ -86,27 +80,18 @@ class FortifyServiceProvider extends ServiceProvider
             };
         });
 
-        /**
-         * ====== ★ 新規追加 ======
-         * Fortify の RegisterResponse を差し替え
-         * 登録後にマイページ（またはプロフィール初回設定）へ遷移
-         */
-        $this->app->singleton(RegisterResponseContract::class, RegisterResponse::class);
+        // ※ RegisterResponse のバインドは AppServiceProvider に一本化済み（重複防止）
     }
 
     public function boot(): void
     {
-        /**
-         * ====== Fortify アクション割り当て ======
-         */
+        // ====== Fortify アクション割り当て ======
         Fortify::createUsersUsing(CreateNewUser::class);
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
 
-        /**
-         * ====== Fortify ビュー割り当て ======
-         */
+        // ====== Fortify ビュー割り当て ======
         Fortify::loginView(fn () => view('auth.login'));
         Fortify::registerView(fn () => view('auth.register'));
         Fortify::requestPasswordResetLinkView(fn () => view('auth.forgot-password'));

@@ -11,10 +11,10 @@ class Category extends Model
 
     protected $fillable = ['name', 'parent_id', 'sort'];
 
-    /** 🔥 複数カテゴリ対応（N:N） */
+    /** 複数カテゴリ対応（N:N） ※ pivotにtimestampsなし */
     public function items()
     {
-        return $this->belongsToMany(Item::class, 'category_item')->withTimestamps();
+        return $this->belongsToMany(Item::class, 'category_item');
     }
 
     public function singleItems()
