@@ -123,15 +123,10 @@ php artisan test
 | 管理ツール | phpMyAdmin / MailHog |
 | バージョン管理 | Git / GitHub |
 
----
-
-#### ④ MailHog / Stripe 注意書き
-
-```md
 > 💡 **補足**
 > - メールは MailHog に送信されます（開発用URL: [http://localhost:8025](http://localhost:8025)）。
-> - Stripe は **テストキー** で動作します。提出・運用時は本番キーに差し替えてください。
-```
+> - Stripe は **テストキー** で動作します。
+
 ---
 
 ## ER図
