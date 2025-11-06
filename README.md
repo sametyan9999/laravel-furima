@@ -56,7 +56,7 @@
     ```env
     cp .env.example .env
     ```
-> ※ 本リポジトリは `src/` 配下が Laravel のルートです。`.env` は `src/.env` に作成してください。
+> ※ `.env` はプロジェクト直下に作成してください。
 
 4. .env のDB設定を修正（Docker用に修正）
 ```
