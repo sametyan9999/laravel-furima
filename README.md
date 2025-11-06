@@ -60,6 +60,17 @@
 
 4. .env のDB設定を修正（Docker用に修正）
 ```
+# ======================
+# 基本設定
+# ======================
+APP_ENV=local
+APP_KEY=
+APP_DEBUG=true
+APP_URL=http://localhost
+
+# ======================
+# Database（Docker用）
+# ======================
 DB_CONNECTION=mysql
 DB_HOST=mysql
 DB_PORT=3306
@@ -67,6 +78,14 @@ DB_DATABASE=laravel_db
 DB_USERNAME=laravel_user
 DB_PASSWORD=laravel_pass
 
+# ======================
+# ファイルアップロード設定
+# ======================
+FILESYSTEM_DRIVER=public
+
+# ======================
+# メール設定（MailHog）
+# ======================
 MAIL_MAILER=smtp
 MAIL_HOST=mailhog
 MAIL_PORT=1025
@@ -75,7 +94,17 @@ MAIL_PASSWORD=null
 MAIL_ENCRYPTION=null
 MAIL_FROM_ADDRESS="no-reply@example.com"
 MAIL_FROM_NAME="COACHTECH FLEA"
+
+# ======================
+# その他
+# ======================
+QUEUE_CONNECTION=sync
+SESSION_DRIVER=file
+SESSION_LIFETIME=120
 ```
+MailHogについて
+MailHog は開発用のメールキャッチャーで、実際に外部送信は行わず
+http://localhost:8025￼ で送信結果を確認できます。
 
 5. アプリケーションキーを生成
     ```bash
@@ -96,6 +125,15 @@ MAIL_FROM_NAME="COACHTECH FLEA"
 - CategoriesSeeder：カテゴリ14件
 - ItemsSeeder：デフォルト商品10件
 - ItemsCategorySeeder：商品とカテゴリの紐付け
+---
+
+8. ストレージリンク作成（画像アップロード対応）
+```
+php artisan storage:link
+```
+storage/app/public に保存された商品・プロフィール画像を
+http://localhost/storage/... で閲覧できるようにします。
+
 ---
 
 ## テスト実行方法
