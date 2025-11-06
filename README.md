@@ -82,7 +82,11 @@ DB_PASSWORD=laravel_pass
     ```bash
     php artisan db:seed
     ```
-
+### Seeder内容
+初期データには以下が含まれます：
+- CategoriesSeeder：カテゴリ14件
+- ItemsSeeder：デフォルト商品10件
+- ItemsCategorySeeder：商品とカテゴリの紐付け
 ---
 
 ## テスト実行方法
