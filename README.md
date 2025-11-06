@@ -56,7 +56,7 @@
     ```env
     cp .env.example .env
     ```
-> ※ `.env` はプロジェクト直下に作成してください。
+> ※ `.env` ファイルはプロジェクト直下（`laravel-furima/.env`）に作成してください。
 
 4. .env のDB設定を修正（Docker用に修正）
 ```
@@ -66,6 +66,15 @@ DB_PORT=3306
 DB_DATABASE=laravel_db
 DB_USERNAME=laravel_user
 DB_PASSWORD=laravel_pass
+
+MAIL_MAILER=smtp
+MAIL_HOST=mailhog
+MAIL_PORT=1025
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS="no-reply@example.com"
+MAIL_FROM_NAME="COACHTECH FLEA"
 ```
 
 5. アプリケーションキーを生成
