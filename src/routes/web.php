@@ -79,3 +79,9 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/mypage/profile', [ProfileController::class, 'update'])->name('mypage.profile.update');
     });
 });
+
+/**
+ * Stripe Webhook（認証不要）
+ * - コンビニ支払いの入金完了などを通知する
+ */
+Route::post('/stripe/webhook', [PurchaseController::class, 'webhook'])->name('stripe.webhook');
