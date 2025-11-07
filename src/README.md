@@ -269,3 +269,6 @@ stripe trigger payment_intent.succeeded \
 | ログイン | [http://localhost/login](http://localhost/login) |
 
 © 2025 coachtechフリマ
+
+
+修正聞いたかな
