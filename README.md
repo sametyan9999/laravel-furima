@@ -181,6 +181,32 @@ php artisan test
 
 ---
 
+## Stripe CLI（開発環境でのWebhook受信に必要）
+
+StripeのWebhook通知をローカル環境で受信するためには、**Stripe CLI（公式ツール）** のインストールが必要です。
+Stripe CLIを使用することで、Stripeのテストイベント（例：支払い成功）をローカル環境のLaravelアプリへ転送できます。
+
+### インストール（Macの場合）
+```bash
+brew install stripe/stripe-cli/stripe
+```
+ログイン
+```bash
+stripe login
+```
+ブラウザが自動で開き、Stripeアカウントへの認証を求められます。
+バージョン確認
+```bash
+stripe --version
+```
+stripe version 1.x.x と表示されればインストール完了です。
+補足
+	•	Stripe CLI は開発環境専用ツールです。本番環境では Stripe ダッシュボード上で Webhook URL を登録してください。
+	•	CLIを終了するとWebhook受信も停止します。再開時は新しい whsec_xxx を .env に再設定する必要があります。
+	•	Stripe CLIを使うと、コンビニ支払いなどの 非同期決済処理（Webhook連携） をローカルで再現できます。
+
+    ---
+
 ## Webhook設定（開発環境）
 
 開発環境では、Stripe CLIを使ってWebhookをローカルに転送します。
