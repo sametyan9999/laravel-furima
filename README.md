@@ -101,10 +101,18 @@ MAIL_FROM_NAME="COACHTECH FLEA"
 QUEUE_CONNECTION=sync
 SESSION_DRIVER=file
 SESSION_LIFETIME=120
+
+# ======================
+# Stripe設定
+# ======================
+STRIPE_KEY=pk_test_REDACTED
+STRIPE_SECRET=sk_test_REDACTED
 ```
 MailHogについて
 MailHog は開発用のメールキャッチャーで、実際に外部送信は行わず
 http://localhost:8025￼ で送信結果を確認できます。
+
+
 
 5. アプリケーションキーを生成
     ```bash
