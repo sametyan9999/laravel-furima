@@ -205,7 +205,7 @@ stripe version 1.x.x と表示されればインストール完了です。
 	•	CLIを終了するとWebhook受信も停止します。再開時は新しい whsec_xxx を .env に再設定する必要があります。
 	•	Stripe CLIを使うと、コンビニ支払いなどの 非同期決済処理（Webhook連携） をローカルで再現できます。
 
-    ---
+---
 
 ## Webhook設定（開発環境）
 
