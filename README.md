@@ -53,12 +53,12 @@
     ```
 
 3. .env ファイルを作成
-    ```env
+    ```bash
     cp .env.example .env
     ```
 > ※ `.env` ファイルはプロジェクト直下（`laravel-furima/.env`）に作成してください。
 
-4. .env のDB設定を修正（Docker用に修正）
+4. `.env` の設定を修正（Docker用設定＋Stripe・MailHog設定）
 ```
 # ======================
 # 基本設定
@@ -101,10 +101,31 @@ MAIL_FROM_NAME="COACHTECH FLEA"
 QUEUE_CONNECTION=sync
 SESSION_DRIVER=file
 SESSION_LIFETIME=120
+
+# ======================
+# Stripe設定（各自のキーを設定してください）
+# ======================
+STRIPE_KEY=pk_test_******************************
+STRIPE_SECRET=sk_test_******************************
 ```
-MailHogについて
-MailHog は開発用のメールキャッチャーで、実際に外部送信は行わず
-http://localhost:8025￼ で送信結果を確認できます。
+---
+
+**補足**
+> - `.env` は開発者ごとに設定が異なります。クローン後は上記のように各自で設定してください。
+> - `.env` は `.gitignore` により GitHub へアップロードされません。
+> - Stripeキーは、Stripeダッシュボード → 開発者 → APIキー → テストモード から取得可能です。
+> - MailHog は開発用のメールキャッチャーです。送信結果は [http://localhost:8025](http://localhost:8025) で確認できます。
+
+---
+
+**テストカード情報**
+> - カード番号：`4000003920000003`
+> - 有効期限：任意の未来日（例：12/30）
+> - CVC：任意の3桁（例：123）
+> - この番号を使うと実際に課金は発生せず、テスト決済が行えます。
+> - 詳細は [Stripe公式ドキュメント](https://stripe.com/docs/testing#international-cards) を参照してください。
+
+---
 
 5. アプリケーションキーを生成
     ```bash
@@ -146,7 +167,61 @@ php artisan test
 
 ---
 
+## 決済処理フロー（Stripe）
+本アプリでは、Stripeを利用した カード支払い と コンビニ支払い の2種類に対応しています。
 
+ ### カード支払い
+ - 支払い完了後、即座に「購入完了」画面へ遷移します。
+ - 商品は即時に `sold` 状態へ更新され、一覧でも「Sold」バッジが表示されます。
+
+ ### コンビニ支払い
+ - Stripeが発行する支払い番号を使って、店頭（ローソン・ファミリーマートなど）で支払いを行います。
+ - 入金完了後、Stripeの Webhook 通知によってシステムが商品を `sold` 状態へ更新します。
+ - そのため、支払い直後はステータスがすぐには反映されません（非同期処理）。
+
+---
+
+## Webhook設定（開発環境）
+
+開発環境では、Stripe CLIを使ってWebhookをローカルに転送します。
+```bash
+stripe listen --forward-to http://localhost/stripe/webhook
+```
+実行後に表示されるメッセージ：
+```
+Ready! Your webhook signing secret is whsec_xxxxxxxxxxxxx
+```
+この値を `.env` に設定します：
+```
+STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxx
+```
+設定後はキャッシュをクリア：
+```bash
+php artisan config:clear
+```
+
+---
+
+## Webhookテスト（コンビニ入金の再現）
+別ターミナルで以下を実行し、入金完了イベントを再現します
+```bash
+stripe trigger payment_intent.succeeded \
+  --override payment_intent:metadata.item_id=1 \
+  --override payment_intent:metadata.user_id=5
+```
+- `item_id`：販売中商品のID
+- `user_id`：購入者ユーザーのID
+※実際のDB値に置き換えてください。
+
+実行後、DBまたは一覧画面で `sold` に更新されていることを確認できます。
+
+💡 **補足**
+- Stripe CLIを終了すると Webhook の受信も停止します。再開時は新しい Secret を `.env` に再設定してください。
+- 本番環境では Stripe ダッシュボード上で正式な Webhook URL を登録します。
+- Webhook リスニング中は Ctrl + C で停止可能です。
+
+
+---
 
 ## 環境情報（Docker構成）
 | サービス | バージョン / イメージ | 備考 |
@@ -174,7 +249,7 @@ php artisan test
 | 管理ツール | phpMyAdmin / MailHog |
 | バージョン管理 | Git / GitHub |
 
-> 💡 **補足**
+> **補足**
 > - メールは MailHog に送信されます（開発用URL: [http://localhost:8025](http://localhost:8025)）。
 > - Stripe は **テストキー** で動作します。
 
