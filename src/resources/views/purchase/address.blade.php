@@ -7,7 +7,7 @@
 
         <form method="post" action="{{ route('purchase.address.update', $item) }}" novalidate>
             @csrf
-
+            @method('PUT')
             {{-- 郵便番号 --}}
             <label for="postal_code">郵便番号</label>
             <input
