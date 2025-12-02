@@ -104,14 +104,16 @@ class ItemController extends Controller
     private function getMylistItems(?string $keyword, ?int $categoryId)
     {
         return Auth::user()
-            ->likedItems()
-            ->select('items.*')
-            ->when($keyword, fn($q) => $this->applyKeywordFilter($q, $keyword, 'items.'))
-            ->when($categoryId, fn($q) => $q->whereHas('categories', fn($qq) => $qq->where('categories.id', $categoryId)))
-            ->orderByRaw("CASE WHEN items.status='on_sale' THEN 0 ELSE 1 END")
-            ->orderBy('items.created_at', 'desc')
-            ->paginate(12)
-            ->withQueryString();
+        ->likedItems()
+        ->select('items.*')
+        // 自分が出品した商品は除外する
+        ->where('items.user_id', '!=', Auth::id())
+        ->when($keyword, fn($q) => $this->applyKeywordFilter($q, $keyword, 'items.'))
+        ->when($categoryId, fn($q) => $q->whereHas('categories', fn($qq) => $qq->where('categories.id', $categoryId)))
+        ->orderByRaw("CASE WHEN items.status='on_sale' THEN 0 ELSE 1 END")
+        ->orderBy('items.created_at', 'desc')
+        ->paginate(12)
+        ->withQueryString();
     }
 
     /** キーワード検索適用 */
