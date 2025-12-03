@@ -1,0 +1,326 @@
+/* 全体レイアウト */
+.trade-page {
+    background: #f5f5f5;
+}
+
+.trade-wrapper {
+    display: flex;
+    min-height: calc(100vh - 64px);
+    /* ヘッダーを除いた高さ想定 */
+}
+
+/* サイドバー */
+.trade-sidebar {
+    width: 220px;
+    background: #666;
+    color: #fff;
+    padding: 24px 16px;
+}
+
+.sidebar-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 24px;
+}
+
+.sidebar-item {
+    display: block;
+    margin-bottom: 12px;
+    text-decoration: none;
+    color: inherit;
+}
+
+.sidebar-item__inner {
+    display: flex;
+    align-items: center;
+    padding: 6px 8px;
+    background: #f36a7b;
+    border-radius: 2px;
+}
+
+.sidebar-item__thumb {
+    width: 40px;
+    height: 40px;
+    overflow: hidden;
+    background: #eee;
+}
+
+.sidebar-item__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.sidebar-item__name {
+    font-size: 12px;
+    margin-left: 8px;
+}
+
+.sidebar-item.is-active .sidebar-item__inner {
+    outline: 2px solid #fff;
+}
+
+.sidebar-empty {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+/* メイン */
+.trade-main {
+    flex: 1;
+    background: #fff;
+    padding: 32px 64px 32px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* アバター */
+.avatar-circle {
+    border-radius: 50%;
+    overflow: hidden;
+    background: #ddd;
+}
+
+.avatar-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-circle--lg {
+    width: 64px;
+    height: 64px;
+}
+
+.avatar-circle--sm {
+    width: 32px;
+    height: 32px;
+}
+
+/* ヘッダー */
+.trade-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.trade-header__left {
+    display: flex;
+    align-items: center;
+}
+
+.trade-header__title {
+    margin-left: 16px;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.btn-finish {
+    padding: 10px 24px;
+    border-radius: 24px;
+    border: none;
+    background: #f68f99;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* 商品情報 */
+.trade-item-box {
+    display: flex;
+    padding: 24px 0 32px;
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 40px;
+}
+
+.trade-item-img {
+    width: 260px;
+}
+
+.trade-item-img__inner {
+    width: 240px;
+    height: 240px;
+    background: #f3f3f3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.trade-item-img__inner img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.trade-item-info {
+    flex: 1;
+    padding-left: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.trade-item-name {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+
+.trade-item-price {
+    font-size: 20px;
+}
+
+/* メッセージ一覧 */
+.trade-message-list {
+    padding: 24px 0 32px;
+    flex: 1;
+}
+
+.trade-message {
+    margin-bottom: 32px;
+}
+
+.trade-message--me {
+    text-align: right;
+}
+
+.trade-msg-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.trade-msg-header--me {
+    justify-content: flex-end;
+}
+
+.trade-msg-header--me .trade-msg-username {
+    margin-right: 8px;
+}
+
+.trade-msg-username {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.trade-msg-body {
+    display: inline-block;
+    max-width: 70%;
+}
+
+.trade-msg-text {
+    padding: 12px 18px;
+    border-radius: 6px;
+    background: #e0e0e0;
+    font-size: 14px;
+    text-align: left;
+}
+
+/* 自分のメッセージもグレーにする */
+.trade-msg-text--me {
+    background: #e0e0e0;
+}
+
+.trade-msg-image {
+    display: block;
+    max-width: 260px;
+    margin-top: 8px;
+    border-radius: 4px;
+}
+
+.trade-msg-deleted {
+    font-size: 12px;
+    color: #999;
+}
+
+.trade-msg-actions {
+    margin-top: 8px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 20px;
+}
+
+.trade-msg-actions .link-btn {
+    border: none;
+    background: none;
+    padding: 0;
+    font-size: 14px;
+    color: #707070;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+/* 共通リンクボタン */
+.link-btn {
+    border: none;
+    background: none;
+    padding: 0;
+    font-size: 14px;
+    color: #666;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* メッセージ入力フォーム（画面下に） */
+.trade-form {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto 0;
+    padding-top: 16px;
+    border-top: 1px solid #ddd;
+    background: #fff;
+}
+
+.trade-form-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.trade-form-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.trade-form-image-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    padding: 0 18px;
+    border-radius: 6px;
+    border: 2px solid #f08a8a;
+    background: #fff;
+    color: #f08a8a;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.trade-form-image-input {
+    display: none;
+}
+
+.trade-send-btn {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.trade-send-btn img {
+    width: 28px;
+    height: 28px;
+}

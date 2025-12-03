@@ -10,11 +10,9 @@ class Purchase extends Model
 {
     use HasFactory;
 
-    /** UUID 主キー */
     public $incrementing = false;
     protected $keyType = 'string';
 
-    /** 一括代入許可 */
     protected $fillable = [
         'id',
         'user_id',
@@ -34,7 +32,6 @@ class Purchase extends Model
         'purchased_at' => 'datetime',
     ];
 
-    /** 作成時にUUIDを採番（id未指定なら） */
     protected static function booted(): void
     {
         static::creating(function (self $model) {
@@ -44,13 +41,40 @@ class Purchase extends Model
         });
     }
 
+    /** 購入者 */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
+    /** 購入された商品 */
     public function item()
     {
         return $this->belongsTo(Item::class);
+    }
+
+    /** 商品を出品したユーザー（出品者） */
+    public function seller()
+    {
+        return $this->hasOneThrough(
+            User::class,
+            Item::class,
+            'id',        // items.id
+            'id',        // users.id
+            'item_id',   // purchases.item_id
+            'user_id'    // items.user_id
+        );
+    }
+
+    /** この取引に紐づくメッセージ一覧 */
+    public function tradeMessages()
+    {
+        return $this->hasMany(TradeMessage::class);
+    }
+
+    /** この取引のレビュー一覧 */
+    public function tradeReviews()
+    {
+        return $this->hasMany(TradeReview::class);
     }
 }

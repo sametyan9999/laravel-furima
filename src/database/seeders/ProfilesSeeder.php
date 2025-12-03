@@ -10,17 +10,37 @@ class ProfilesSeeder extends Seeder
 {
     public function run(): void
     {
-        $user = User::where('email', 'admin@example.com')->first();
+        $profiles = [
+            'sellerA@example.com' => [
+                'postal_code'   => '123-4567',
+                'address_line1' => '東京都新宿区西新宿1-1-1',
+                'address_line2' => 'sellerAマンション101',
+                'phone'         => '080-1111-1111',
+            ],
+            'sellerB@example.com' => [
+                'postal_code'   => '234-5678',
+                'address_line1' => '大阪府大阪市北区梅田2-2-2',
+                'address_line2' => 'sellerBハイツ202',
+                'phone'         => '080-2222-2222',
+            ],
+            'viewer@example.com' => [
+                'postal_code'   => '345-6789',
+                'address_line1' => '福岡県福岡市中央区天神3-3-3',
+                'address_line2' => 'viewerコーポ303',
+                'phone'         => '080-3333-3333',
+            ],
+        ];
 
-        if ($user) {
+        foreach ($profiles as $email => $data) {
+            $user = User::where('email', $email)->first();
+
+            if (!$user) {
+                continue;
+            }
+
             Profile::updateOrCreate(
                 ['user_id' => $user->id],
-                [
-                    'postal_code'   => '123-4567',
-                    'address_line1' => '東京都渋谷区道玄坂1-2-3',
-                    'address_line2' => 'テストビル101',
-                    'avatar_path'   => null,
-                ]
+                $data
             );
         }
     }

@@ -77,7 +77,28 @@ class User extends Authenticatable implements MustVerifyEmail
     /** 購入履歴 */
     public function purchases(): HasMany
     {
-        // テーブルの外部キー名が user_id の場合はこちらを使用
         return $this->hasMany(Purchase::class, 'user_id');
+    }
+
+    /* ---------------------------
+       ★ 追加リレーション
+    --------------------------- */
+
+    /** 自分が送った取引メッセージ */
+    public function tradeMessages(): HasMany
+    {
+        return $this->hasMany(TradeMessage::class);
+    }
+
+    /** 自分が書いたレビュー（レビュワー） */
+    public function writtenTradeReviews(): HasMany
+    {
+        return $this->hasMany(TradeReview::class, 'reviewer_id');
+    }
+
+    /** 自分が評価されたレビュー（レビュー対象） */
+    public function receivedTradeReviews(): HasMany
+    {
+        return $this->hasMany(TradeReview::class, 'reviewee_id');
     }
 }

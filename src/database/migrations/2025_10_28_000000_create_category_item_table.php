@@ -8,24 +8,25 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('category_item')) {
-            Schema::create('category_item', function (Blueprint $table) {
-                $table->unsignedBigInteger('category_id');
-                $table->unsignedBigInteger('item_id');
+        Schema::create('category_item', function (Blueprint $table) {
+            $table->unsignedBigInteger('category_id');
+            $table->unsignedBigInteger('item_id');
 
-                // 複合主キー（重複禁止）
-                $table->primary(['category_id', 'item_id']);
+            // 複合主キー（重複禁止）
+            $table->primary(['category_id', 'item_id']);
 
-                // 外部キー（削除連鎖）
-                $table->foreign('category_id')
-                      ->references('id')->on('categories')
-                      ->cascadeOnDelete();
+            // 仕様書どおりタイムスタンプも持たせる
+            $table->timestamps();
 
-                $table->foreign('item_id')
-                      ->references('id')->on('items')
-                      ->cascadeOnDelete();
-            });
-        }
+            // 外部キー（削除連鎖）
+            $table->foreign('category_id')
+                  ->references('id')->on('categories')
+                  ->cascadeOnDelete();
+
+            $table->foreign('item_id')
+                  ->references('id')->on('items')
+                  ->cascadeOnDelete();
+        });
     }
 
     public function down(): void

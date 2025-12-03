@@ -5,13 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\{Item, Purchase, Profile};
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
-use App\Http\Requests\ProfileRequest;
+use Illuminate\Support\Facades\DB;
+use App\Http\Requests\ProfileRequest; // ← 追加
 
 class ProfileController extends Controller
 {
-    /**
-     * マイページ（購入 / 出品一覧）
-     */
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -20,21 +18,39 @@ class ProfileController extends Controller
         $profile = $user->profile;
         $bought = null;
         $sold = null;
+        $trading = null;
+        $trade_unread_total = 0;
 
         if ($view === 'buy') {
+
             $bought = $this->getBoughtItems($user, $request);
+
+        } elseif ($view === 'trade') {
+
+            $trading = $this->getTradingItems($user, $request);
+            $trade_unread_total = $trading->sum('unread');
+
         } else {
+
             $sold = $this->getSoldItems($user, $request);
         }
 
-        return view('mypage.index', compact('user', 'profile', 'bought', 'sold', 'view'));
+        return view('mypage.index', compact(
+            'user',
+            'profile',
+            'bought',
+            'sold',
+            'trading',
+            'trade_unread_total',
+            'view'
+        ));
     }
 
     private function normalizeViewParam(Request $request): string
     {
         if ($request->has('page')) {
             $legacy = (string) $request->query('page');
-            if (in_array($legacy, ['buy', 'sell'], true)) {
+            if (in_array($legacy, ['buy', 'sell', 'trade'], true)) {
                 $request->merge(['view' => $legacy]);
             }
         }
@@ -59,6 +75,33 @@ class ProfileController extends Controller
             ->appends($request->except('sell_page'));
     }
 
+    /**
+     * ▼ 追加：取引中の商品一覧
+     */
+    private function getTradingItems($user, Request $request)
+    {
+        return DB::table('purchases')
+            ->join('items', 'purchases.item_id', '=', 'items.id')
+            ->where(function ($q) use ($user) {
+                $q->where('purchases.user_id', $user->id)
+                  ->orWhere('items.user_id', $user->id);
+            })
+            ->select(
+                'purchases.id as purchase_id',
+                'items.name',
+                'items.image',
+
+                DB::raw('(SELECT COUNT(*) FROM trade_messages
+                          WHERE trade_messages.purchase_id = purchases.id
+                          AND trade_messages.user_id != '.$user->id.'
+                          AND trade_messages.is_deleted = 0
+                         ) AS unread')
+            )
+            ->latest('purchases.created_at')
+            ->paginate(12, ['*'], 'trade_page')
+            ->appends($request->except('trade_page'));
+    }
+
     public function edit()
     {
         $profile = Auth::user()->profile;
@@ -78,13 +121,8 @@ class ProfileController extends Controller
         $profile->address_line1 = $data['address_line1'];
         $profile->address_line2 = $data['address_line2'] ?? null;
 
-        if (isset($data['phone'])) {
-            $profile->phone = $data['phone'];
-        }
-
-        if (isset($data['bio'])) {
-            $profile->bio = $data['bio'];
-        }
+        if (isset($data['phone'])) $profile->phone = $data['phone'];
+        if (isset($data['bio'])) $profile->bio = $data['bio'];
 
         if ($request->hasFile('avatar')) {
             $path = $request->file('avatar')->store('avatars', 'public');
