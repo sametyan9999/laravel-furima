@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Items;
 
-use App\Models\User;
 use App\Models\Item;
 use App\Models\Like;
 use App\Models\Purchase;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -13,12 +13,13 @@ class MylistIndexTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const INDEX = '/items/mylist';
+    private const INDEX = '/mylist';
 
     /** @test */
     public function いいね済み商品だけが表示される(): void
     {
-        $user        = User::factory()->create();
+        $user = User::factory()->create();
+
         $likedItem   = Item::factory()->create();
         $unlikedItem = Item::factory()->create();
 
@@ -36,13 +37,22 @@ class MylistIndexTest extends TestCase
     }
 
     /** @test */
-    public function 購入済み商品には_Sold_と表示される(): void
+    public function 購入済み商品には_sold_と表示される(): void
     {
         $user = User::factory()->create();
         $item = Item::factory()->create();
 
-        Like::factory()->create(['user_id' => $user->id, 'item_id' => $item->id]);
-        Purchase::factory()->create(['item_id' => $item->id, 'user_id' => $user->id]);
+        // マイリストに入っている想定
+        Like::factory()->create([
+            'user_id' => $user->id,
+            'item_id' => $item->id,
+        ]);
+
+        // 購入済みにする
+        Purchase::factory()->create([
+            'user_id' => $user->id,
+            'item_id' => $item->id,
+        ]);
 
         $this->actingAs($user);
         $response = $this->get(self::INDEX);

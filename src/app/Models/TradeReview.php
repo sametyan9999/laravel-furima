@@ -12,13 +12,13 @@ class TradeReview extends Model
     protected $fillable = [
         'purchase_id',
         'reviewer_id',
-        'reviewee_id',
-        'rating',
+        'target_id',  // ← ER図どおり
+        'score',      // ← ER図どおり
         'comment',
     ];
 
     protected $casts = [
-        'rating' => 'integer',
+        'score' => 'integer',
     ];
 
     /**
@@ -40,8 +40,8 @@ class TradeReview extends Model
     /**
      * 評価された側（レビュー対象）
      */
-    public function reviewee()
+    public function target()
     {
-        return $this->belongsTo(User::class, 'reviewee_id');
+        return $this->belongsTo(User::class, 'target_id');
     }
 }

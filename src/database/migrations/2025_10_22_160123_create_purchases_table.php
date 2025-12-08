@@ -49,6 +49,11 @@ return new class extends Migration
                   ->nullable()
                   ->comment('購入日時');
 
+            // ★ 取引完了フラグ
+            $table->boolean('is_done')
+                  ->default(false)
+                  ->comment('取引完了フラグ');
+
             // 配送先情報（購入時のスナップショット）
             $table->string('shipping_name', 100)
                   ->nullable()

@@ -197,12 +197,13 @@
     margin-top: 24px;
 }
 
-/* Sold バッジ */
+/* 商品カード */
 .card__thumb {
     position: relative;
     overflow: hidden;
 }
 
+/* Sold バッジ */
 .badge-sold {
     position: absolute;
     top: 50%;
@@ -222,8 +223,49 @@
     text-shadow: 1px 2px 6px rgba(0, 0, 0, .35);
 }
 
+/* 未読メッセージ数バッジ（左上の赤丸） */
+.badge-unread {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 9999px;
+    background: #e64646;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 0 2px #fff;
+    z-index: 3;
+}
+
 /* 無効カード */
 .card.is-disabled {
     pointer-events: none;
     opacity: .6;
 }
+
+/* --- 取引評価の星表示（強制上書き版） --- */
+.star-rating {
+    display: flex;
+    gap: 2px;
+    margin-top: 6px;
+}
+
+.star-rating .star {
+    font-size: 22px;
+    color: #ccc !important;
+    /* ★未評価：グレー強制 */
+    -webkit-text-fill-color: #ccc !important;
+}
+
+.star-rating .star.filled {
+    color: #FFD700 !important;
+    /* ★評価済み：ゴールド強制 */
+    -webkit-text-fill-color: #FFD700 !important;
+}
+

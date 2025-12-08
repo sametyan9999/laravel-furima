@@ -15,25 +15,24 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    /** 一括代入可能属性 */
     protected $fillable = [
         'name',
         'email',
         'password',
     ];
 
-    /** 非表示属性 */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /** キャスト属性 */
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
 
-    /** パスワードが平文なら自動でハッシュ化 */
+    /**
+     * パスワードを自動ハッシュ
+     */
     public function setPasswordAttribute($value): void
     {
         $this->attributes['password'] =
@@ -41,8 +40,6 @@ class User extends Authenticatable implements MustVerifyEmail
                 ? $value
                 : Hash::make($value);
     }
-
-    // ===== リレーション定義 =====
 
     /** プロフィール */
     public function profile(): HasOne
@@ -74,15 +71,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(Item::class, 'likes')->withTimestamps();
     }
 
-    /** 購入履歴 */
+    /** 購入履歴（購入者側） */
     public function purchases(): HasMany
     {
         return $this->hasMany(Purchase::class, 'user_id');
     }
-
-    /* ---------------------------
-       ★ 追加リレーション
-    --------------------------- */
 
     /** 自分が送った取引メッセージ */
     public function tradeMessages(): HasMany
@@ -90,15 +83,34 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(TradeMessage::class);
     }
 
-    /** 自分が書いたレビュー（レビュワー） */
+    /** 自分が書いたレビュー（レビューした側） */
     public function writtenTradeReviews(): HasMany
     {
         return $this->hasMany(TradeReview::class, 'reviewer_id');
     }
 
-    /** 自分が評価されたレビュー（レビュー対象） */
+    /**
+     * 自分が評価されたレビュー（レビュー対象）
+     * ★ migration のカラム target_id に合わせて修正済み
+     */
     public function receivedTradeReviews(): HasMany
     {
-        return $this->hasMany(TradeReview::class, 'reviewee_id');
+        return $this->hasMany(TradeReview::class, 'target_id');
+    }
+
+    /**
+     * ★ 取引評価の平均（四捨五入）
+     * - 評価が無ければ null
+     * - round() のエラーを防ぐため float キャストを追加
+     */
+    public function getReviewAverage(): ?int
+    {
+        $avg = $this->receivedTradeReviews()->avg('score');
+
+        if ($avg === null) {
+            return null;
+        }
+
+        return (int) round((float) $avg);
     }
 }

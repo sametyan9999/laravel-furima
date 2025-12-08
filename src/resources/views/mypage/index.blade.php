@@ -1,4 +1,3 @@
-{{-- resources/views/mypage/index.blade.php --}}
 @extends('layouts.app')
 @section('title','マイページ')
 
@@ -19,6 +18,16 @@
       <div class="mypage-hero__name">{{ $user->name }}</div>
       <a href="{{ route('mypage.profile.edit') }}" class="btn btn-outline btn-sm mypage-hero__edit">プロフィールを編集</a>
     </div>
+
+    {{-- ★ 評価平均表示（US002 / FN005） --}}
+    @if(!is_null($reviewAvg))
+      <div class="star-rating">
+        @for ($i = 1; $i <= 5; $i++)
+          <span class="star {{ $i <= $reviewAvg ? 'filled' : '' }}">★</span>
+        @endfor
+      </div>
+    @endif
+
   </div>
 </div>
 
@@ -34,19 +43,18 @@
     <a class="tab__link {{ $view === 'buy' ? 'is-active' : '' }}"
        href="{{ route('mypage.index', ['view'=>'buy']) }}">購入した商品</a>
 
-    {{-- ★ 追加：取引中の商品 --}}
     <a class="tab__link {{ $view === 'trade' ? 'is-active' : '' }}"
        href="{{ route('mypage.index', ['view'=>'trade']) }}">
        取引中の商品
-       @if($trade_unread_total > 0)
-          <span class="badge">{{ $trade_unread_total }}</span>
+       @if(isset($trade_unread_total_all) && $trade_unread_total_all > 0)
+          <span class="badge">{{ $trade_unread_total_all }}</span>
        @endif
     </a>
   </div>
 
-  {{-- ▼ 各タブごとの表示 --}}
+  {{-- ▼ 以下のタブ内容 --}}
   @if($view === 'buy')
-      {{-- ▼ 購入した商品 --}}
+
       @if($bought && $bought->count())
         <div class="grid grid--mypage">
           @foreach($bought as $p)
@@ -68,7 +76,7 @@
       @endif
 
   @elseif($view === 'trade')
-      {{-- ▼ 追加：取引中の商品 --}}
+
       @if($trading && $trading->count())
         <div class="grid grid--mypage">
           @foreach($trading as $row)
@@ -76,9 +84,8 @@
               <div class="card__thumb">
                 <img src="{{ $row->image }}" alt="商品画像">
 
-                {{-- 未読メッセージ数 --}}
-                @if($row->unread > 0)
-                  <span class="badge-unread">{{ $row->unread }}</span>
+                @if((int)$row->unread > 0)
+                  <span class="badge-unread">{{ (int)$row->unread }}</span>
                 @endif
               </div>
               <div class="card__name">{{ $row->name }}</div>
@@ -91,7 +98,7 @@
       @endif
 
   @else
-      {{-- ▼ 出品した商品 --}}
+
       @if($sold && $sold->count())
         <div class="grid grid--mypage">
           @foreach($sold as $it)
@@ -110,6 +117,7 @@
       @else
         <p class="mt-24 muted">出品した商品はありません。</p>
       @endif
+
   @endif
 </div>
 @endsection

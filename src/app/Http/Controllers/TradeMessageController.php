@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TradeMessageRequest;
 use App\Models\Purchase;
 use App\Models\TradeMessage;
-use Illuminate\Http\Request;
+use App\Models\TradeReview;
 use Illuminate\Support\Facades\Auth;
 
 class TradeMessageController extends Controller
@@ -12,7 +13,7 @@ class TradeMessageController extends Controller
     /**
      * 取引チャット画面
      */
-    public function index(Request $request, Purchase $purchase)
+    public function index(\Illuminate\Http\Request $request, Purchase $purchase)
     {
         $this->authorizeAccess($purchase);
 
@@ -24,30 +25,43 @@ class TradeMessageController extends Controller
             ? $item->user
             : $purchase->user;
 
-        // 「編集対象メッセージ」があるか（?edit=◯）
+        // 編集対象メッセージ（?edit=◯）
         $editingMessage = null;
         if ($editId = $request->query('edit')) {
             $editingMessage = TradeMessage::where('purchase_id', $purchase->id)
                 ->where('id', $editId)
-                ->where('user_id', $me->id) // 自分のメッセージだけ
+                ->where('user_id', $me->id)
                 ->first();
         }
 
-        // サイドバーの取引一覧
+        /**
+         * サイドバー：未完了の取引のみ & 最新メッセージ順
+         */
         $sidebarTrades = Purchase::with('item')
+            ->where('is_done', 0)
             ->where(function ($q) use ($me) {
                 $q->where('user_id', $me->id)
                     ->orWhereHas('item', function ($q2) use ($me) {
                         $q2->where('user_id', $me->id);
                     });
             })
-            ->orderByDesc('purchased_at')
+            // ★ 最新メッセージがある順（ない取引は後ろに回る）
+            ->orderByDesc(
+                TradeMessage::selectRaw('MAX(trade_messages.created_at)')
+                    ->whereColumn('trade_messages.purchase_id', 'purchases.id')
+                    ->where('trade_messages.is_deleted', 0)
+            )
             ->get()
             ->map(function ($p) {
-                return (object) [
-                    'id'    => $p->id,
-                    'name'  => $p->item?->name ?? '',
-                    'image' => $p->item?->image ?? '',
+                $item = $p->item;
+
+                return (object)[
+                    'id'        => $p->id,
+                    'name'      => $item?->name ?? '',
+                    // image_url アクセサがあればそちらを優先
+                    'image_url' => $item?->image_url ?? null,
+                    // 生の image カラムも控えで持つ
+                    'image'     => $item?->image ?? '',
                 ];
             });
 
@@ -57,36 +71,32 @@ class TradeMessageController extends Controller
             ->orderBy('created_at')
             ->get();
 
+        // この取引をすでに評価済みか
+        $alreadyReviewed = TradeReview::where('purchase_id', $purchase->id)
+            ->where('reviewer_id', $me->id)
+            ->exists();
+
         return view('trade.index', [
-            'purchase'       => $purchase,
-            'item'           => $item,
-            'messages'       => $messages,
-            'me'             => $me,
-            'otherUser'      => $otherUser,
-            'sidebarTrades'  => $sidebarTrades,
-            'editingMessage' => $editingMessage,
+            'purchase'        => $purchase,
+            'item'            => $item,
+            'messages'        => $messages,
+            'me'              => $me,
+            'otherUser'       => $otherUser,
+            'sidebarTrades'   => $sidebarTrades,
+            'editingMessage'  => $editingMessage,
+            'alreadyReviewed' => $alreadyReviewed,
         ]);
     }
 
     /**
      * メッセージ投稿（新規 or 編集）
      */
-    public function store(Request $request, Purchase $purchase)
+    public function store(TradeMessageRequest $request, Purchase $purchase)
     {
         $this->authorizeAccess($purchase);
 
-        $data = $request->validate([
-            'message_id' => ['nullable', 'integer'],
-            'body'       => ['nullable', 'string', 'max:2000'],
-            'image'      => ['nullable', 'image', 'max:2048'],
-        ]);
-
-        // 本文も画像も空の場合はエラー
-        if (empty($data['body']) && !$request->hasFile('image')) {
-            return back()->withErrors([
-                'message' => 'メッセージまたは画像を入力してください',
-            ]);
-        }
+        // FormRequest のバリデーション結果
+        $data = $request->validated();
 
         // 画像保存
         $imagePath = null;
@@ -94,21 +104,21 @@ class TradeMessageController extends Controller
             $imagePath = $request->file('image')->store('trade_messages', 'public');
         }
 
-        $messageId = $data['message_id'] ?? null;
+        // ★ message_id は validated() には含めないので、request から直接取得する
+        $messageId = $request->input('message_id');
 
         if ($messageId) {
-            // ▼ 編集モード：既存メッセージを更新
+            // 編集モード
             $message = TradeMessage::where('purchase_id', $purchase->id)
                 ->where('id', $messageId)
                 ->firstOrFail();
 
-            // 自分のメッセージ以外は編集不可
             if ($message->user_id !== Auth::id()) {
                 abort(403);
             }
 
             $update = [
-                'body' => $data['body'] ?? $message->body,
+                'body' => $data['body'],
             ];
 
             if ($imagePath !== null) {
@@ -117,11 +127,11 @@ class TradeMessageController extends Controller
 
             $message->update($update);
         } else {
-            // ▼ 新規メッセージ作成
+            // 新規メッセージ
             TradeMessage::create([
                 'user_id'     => Auth::id(),
                 'purchase_id' => $purchase->id,
-                'body'        => $data['body'] ?? null,
+                'body'        => $data['body'],
                 'image_path'  => $imagePath,
             ]);
         }
@@ -130,7 +140,7 @@ class TradeMessageController extends Controller
     }
 
     /**
-     * 削除
+     * 削除（論理削除）
      */
     public function destroy(Purchase $purchase, TradeMessage $message)
     {
@@ -146,15 +156,33 @@ class TradeMessageController extends Controller
     }
 
     /**
-     * 取引完了
+     * 取引完了ボタン
      */
     public function finish(Purchase $purchase)
     {
         $this->authorizeAccess($purchase);
 
-        $purchase->update(['is_done' => true]);
+        $userId = Auth::id();
 
-        return back()->with('success', '取引を完了しました');
+        if ($purchase->user_id !== $userId) {
+            abort(403);
+        }
+
+        $alreadyReviewed = TradeReview::where('purchase_id', $purchase->id)
+            ->where('reviewer_id', $userId)
+            ->exists();
+
+        if (!$alreadyReviewed) {
+            // 未評価なら次画面でモーダル表示
+            session()->flash('review_modal', true);
+        } else {
+            // 既に評価済みなら取引完了にする
+            if (!$purchase->is_done) {
+                $purchase->update(['is_done' => true]);
+            }
+        }
+
+        return redirect()->route('trade.show', $purchase);
     }
 
     /**

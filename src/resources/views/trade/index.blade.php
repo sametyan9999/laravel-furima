@@ -19,7 +19,7 @@
           <a href="{{ route('trade.show', $t->id) }}" class="sidebar-item">
             <div class="sidebar-item__inner">
               <div class="sidebar-item__thumb">
-                <img src="{{ $t->image }}" alt="{{ $t->name }}">
+                <img src="{{ $t->image_url ?? $t->image }}" alt="{{ $t->name }}">
               </div>
               <div class="sidebar-item__name">
                 {{ $t->name }}
@@ -32,6 +32,12 @@
 
     {{-- ▼ メインコンテンツ --}}
     <section class="trade-main">
+
+      @php
+        // ログインユーザーが「購入者」か「出品者」かを判定
+        $isBuyer  = ($purchase->user_id === $me->id);
+        $isSeller = ($purchase->item->user_id === $me->id);
+      @endphp
 
       {{-- 上部ヘッダー --}}
       <div class="trade-header">
@@ -46,7 +52,8 @@
           </span>
         </div>
 
-        @if(!$purchase->is_done)
+        {{-- ★ 取引完了ボタンは「購入者」だけに表示 --}}
+        @if(!$purchase->is_done && $isBuyer)
           <form method="post" action="{{ route('trade.finish', $purchase) }}">
             @csrf
             <button class="btn-finish" type="submit">取引を完了する</button>
@@ -63,21 +70,69 @@
         </div>
         <div class="trade-item-info">
           <h2 class="trade-item-name">{{ $item->name }}</h2>
-          <p class="trade-item-price">
-            ¥{{ number_format($item->price) }}
-          </p>
+          <p class="trade-item-price">¥{{ number_format($item->price) }}</p>
         </div>
       </div>
 
-      {{-- エラーメッセージ（入力欄の上に表示） --}}
-      @if ($errors->any())
-        <div class="trade-error-box">
-          <ul>
-            @foreach ($errors->all() as $error)
-              <li>{{ $error }}</li>
-            @endforeach
-          </ul>
+      {{-- 取引完了後の評価モーダル --}}
+      @if (
+        // 購入者：取引完了ボタン押下直後のみ
+        ($isBuyer && session('review_modal') && !$alreadyReviewed)
+        ||
+        // 出品者：購入者が完了済み & 自分は未評価のとき
+        ($isSeller && $purchase->is_done && !$alreadyReviewed)
+      )
+        <div class="trade-review-modal">
+          <div class="trade-review-modal__inner">
+            <p class="trade-review-modal__title">取引が完了しました。</p>
+            <p class="trade-review-modal__text">今回の取引相手はいかがでしたか？</p>
+
+            <form method="post" action="{{ route('trade.review.store', $purchase) }}">
+              @csrf
+
+              <div class="trade-review-modal__stars" id="rating-stars">
+                @for ($i = 1; $i <= 5; $i++)
+                  <span class="star"
+                        data-value="{{ $i }}"
+                        style="font-size:32px; cursor:pointer; color:#ccc;">
+                    ★
+                  </span>
+                @endfor
+              </div>
+
+              <input type="hidden" name="rating" id="rating-input" value="3">
+
+              <div class="trade-review-modal__actions">
+                <button type="submit" class="trade-review-modal__submit">送信する</button>
+              </div>
+            </form>
+          </div>
         </div>
+
+        <script>
+          document.addEventListener('DOMContentLoaded', () => {
+            const stars = document.querySelectorAll('#rating-stars .star');
+            const ratingInput = document.getElementById('rating-input');
+
+            const updateStars = (value) => {
+              stars.forEach(star => {
+                const v = parseInt(star.dataset.value);
+                star.style.color = v <= value ? '#FFD700' : '#ccc';
+              });
+            };
+
+            // 初期値：★3
+            updateStars(3);
+
+            stars.forEach(star => {
+              star.addEventListener('click', () => {
+                const value = parseInt(star.dataset.value);
+                ratingInput.value = value;
+                updateStars(value);
+              });
+            });
+          });
+        </script>
       @endif
 
       {{-- メッセージ一覧 --}}
@@ -85,7 +140,7 @@
         @foreach($messages as $msg)
 
           @if($msg->user_id === $me->id)
-            {{-- 自分のメッセージ --}}
+            {{-- 自分 --}}
             <div class="trade-message trade-message--me">
               <div class="trade-msg-header trade-msg-header--me">
                 <span class="trade-msg-username">{{ $me->name }}</span>
@@ -102,7 +157,7 @@
                     <div class="trade-msg-text trade-msg-text--me">{{ $msg->body }}</div>
                   @endif
                   @if($msg->image_path)
-                    <img src="{{ asset($msg->image_path) }}" class="trade-msg-image" alt="添付画像">
+                    <img src="{{ asset('storage/' . $msg->image_path) }}" class="trade-msg-image" alt="添付画像">
                   @endif
                 @else
                   <div class="trade-msg-deleted">このメッセージは削除されました</div>
@@ -111,14 +166,8 @@
 
               @if(!$msg->is_deleted)
                 <div class="trade-msg-actions">
-                  {{-- ★ 編集リンク：同じ画面を編集モードで開く --}}
-                  <a href="{{ route('trade.show', ['purchase' => $purchase->id, 'edit' => $msg->id]) }}"
-                     class="link-btn">
-                    編集
-                  </a>
-
-                  <form action="{{ route('trade.delete', [$purchase, $msg]) }}"
-                        method="post">
+                  <a href="{{ route('trade.show', ['purchase' => $purchase->id, 'edit' => $msg->id]) }}" class="link-btn">編集</a>
+                  <form action="{{ route('trade.delete', [$purchase, $msg]) }}" method="post">
                     @csrf
                     @method('delete')
                     <button type="submit" class="link-btn">削除</button>
@@ -128,7 +177,7 @@
             </div>
 
           @else
-            {{-- 相手のメッセージ --}}
+            {{-- 相手 --}}
             <div class="trade-message trade-message--other">
               <div class="trade-msg-header">
                 <div class="avatar-circle avatar-circle--sm">
@@ -145,7 +194,7 @@
                     <div class="trade-msg-text">{{ $msg->body }}</div>
                   @endif
                   @if($msg->image_path)
-                    <img src="{{ asset($msg->image_path) }}" class="trade-msg-image" alt="添付画像">
+                    <img src="{{ asset('storage/' . $msg->image_path) }}" class="trade-msg-image" alt="添付画像">
                   @endif
                 @else
                   <div class="trade-msg-deleted">このメッセージは削除されました</div>
@@ -157,14 +206,24 @@
         @endforeach
       </div>
 
-      {{-- メッセージ入力フォーム（新規 & 編集兼用） --}}
+      {{-- ▼ メッセージ入力フォーム直上のバリデーションメッセージ --}}
+      @if ($errors->any())
+        <div class="trade-form-error">
+          <ul>
+            @foreach ($errors->all() as $error)
+              <li>{{ $error }}</li>
+            @endforeach
+          </ul>
+        </div>
+      @endif
+
+      {{-- メッセージ入力フォーム --}}
       <form method="post"
             action="{{ route('trade.store', $purchase) }}"
             enctype="multipart/form-data"
             class="trade-form">
         @csrf
 
-        {{-- 編集モードのときだけ hidden で message_id を送る --}}
         @if(!empty($editingMessage))
           <input type="hidden" name="message_id" value="{{ $editingMessage->id }}">
         @endif

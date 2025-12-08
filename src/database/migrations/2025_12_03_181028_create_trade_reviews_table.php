@@ -16,18 +16,18 @@ return new class extends Migration
                   ->constrained('users')
                   ->cascadeOnDelete();
 
-            // 評価された人
+            // 評価された人（ER図どおり target_id）
             $table->foreignId('target_id')
                   ->constrained('users')
                   ->cascadeOnDelete();
 
-            // ★ UUID の purchases.id を参照
+            // UUID の purchases.id を参照
             $table->foreignUuid('purchase_id')
                   ->constrained('purchases')
                   ->cascadeOnDelete();
 
-            $table->unsignedTinyInteger('score');      // 評価スコア（1〜5など）
-            $table->string('comment', 255)->nullable();// コメント
+            $table->unsignedTinyInteger('score');       // ER図どおり score
+            $table->string('comment', 255)->nullable(); // コメント（今回は未使用でもOK）
 
             $table->timestamps();
 

@@ -8,6 +8,7 @@ use App\Http\Controllers\ItemController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TradeMessageController;
+use App\Http\Controllers\TradeReviewController;
 
 /**
  * 公開ルート
@@ -18,14 +19,14 @@ Route::get('/item/{item}', [ItemController::class, 'show'])
     ->name('items.show');
 
 /**
- * メール認証フロー
+ * メール認証
  */
 Route::get('/email/verify', function () {
-    return view('auth.verify'); // 誘導画面
+    return view('auth.verify');
 })->middleware(['auth'])->name('verification.notice');
 
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-    $request->fulfill(); // 認証完了
+    $request->fulfill();
     return redirect()->route('mypage.profile.edit');
 })->middleware(['auth', 'signed', 'throttle:6,1'])->name('verification.verify');
 
@@ -39,29 +40,22 @@ Route::post('/email/verification-notification', function (Request $request) {
 
 /**
  * 会員機能
- * - 既定は auth のみ
- * - プロフィール編集画面だけ verified で保護（テスト要件）
  */
 Route::middleware(['auth'])->group(function () {
-    /** マイリスト（個別エンドポイントも用意：テスト対策） */
-    Route::get('/mylist', [ItemController::class, 'mylist'])->name('items.mylist');
-    Route::get('/items/mylist', [ItemController::class, 'mylist'])->name('items.mylist.legacy');
 
-    /** 出品 */
+    Route::get('/mylist', [ItemController::class, 'mylist'])->name('items.mylist');
+
     Route::get('/sell', [ItemController::class, 'create'])->name('items.create');
     Route::post('/sell', [ItemController::class, 'store'])->name('items.store');
 
-    /** いいね */
     Route::post('/items/{item}/like', [ItemController::class, 'like'])
         ->whereNumber('item')->name('items.like');
     Route::delete('/items/{item}/unlike', [ItemController::class, 'unlike'])
         ->whereNumber('item')->name('items.unlike');
 
-    /** コメント */
     Route::post('/items/{item}/comments', [ItemController::class, 'storeComment'])
         ->whereNumber('item')->name('items.comments.store');
 
-    /** 購入 */
     Route::get('/purchase/{item}', [PurchaseController::class, 'index'])
         ->whereNumber('item')->name('purchase.index');
     Route::post('/purchase/{item}', [PurchaseController::class, 'store'])
@@ -71,16 +65,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/purchase/{item}/cancel', [PurchaseController::class, 'cancel'])
         ->whereNumber('item')->name('purchase.cancel');
 
-    /** 住所変更 */
     Route::get('/purchase/address/{item}', [PurchaseController::class, 'editAddress'])
         ->whereNumber('item')->name('purchase.address');
     Route::put('/purchase/address/{item}', [PurchaseController::class, 'updateAddress'])
         ->whereNumber('item')->name('purchase.address.update');
 
-    /** マイページ */
     Route::get('/mypage', [ProfileController::class, 'index'])->name('mypage.index');
 
-    /** プロフィール編集だけ verified で保護 */
     Route::middleware('verified')->group(function () {
         Route::get('/mypage/profile', [ProfileController::class, 'edit'])
             ->name('mypage.profile.edit');
@@ -90,36 +81,27 @@ Route::middleware(['auth'])->group(function () {
 
     /**
      * 取引チャット
-     * URL はすべて /trade/ （単数形）に統一
      */
-    // 一覧（取引チャット画面）
     Route::get('/trade/{purchase}', [TradeMessageController::class, 'index'])
         ->name('trade.show');
 
-    // メッセージ投稿
     Route::post('/trade/{purchase}/message', [TradeMessageController::class, 'store'])
         ->name('trade.store');
 
-    // メッセージ編集画面
-    Route::get('/trade/{purchase}/message/{message}/edit', [TradeMessageController::class, 'edit'])
-        ->name('trade.edit');
-
-    // メッセージ更新
-    Route::put('/trade/{purchase}/message/{message}', [TradeMessageController::class, 'update'])
-        ->name('trade.update');
-
-    // メッセージ削除
     Route::delete('/trade/{purchase}/message/{message}', [TradeMessageController::class, 'destroy'])
         ->name('trade.delete');
 
-    // 取引完了
+    /** 入力保持 API（★追加） */
+    Route::post('/trade/{purchase}/draft', [TradeMessageController::class, 'saveDraft'])
+        ->name('trade.draft');
+
     Route::post('/trade/{purchase}/finish', [TradeMessageController::class, 'finish'])
         ->name('trade.finish');
+
+    Route::post('/trade/{purchase}/review', [TradeReviewController::class, 'store'])
+        ->name('trade.review.store');
 });
 
-/**
- * Stripe Webhook（認証不要）
- * - コンビニ支払いの入金完了などを通知する
- */
+/** Stripe Webhook */
 Route::post('/stripe/webhook', [PurchaseController::class, 'webhook'])
     ->name('stripe.webhook');

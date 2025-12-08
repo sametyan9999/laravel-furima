@@ -6,7 +6,7 @@ use App\Models\{Item, Purchase, Profile};
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Http\Requests\ProfileRequest; // ← 追加
+use App\Http\Requests\ProfileRequest;
 
 class ProfileController extends Controller
 {
@@ -16,9 +16,14 @@ class ProfileController extends Controller
         $view = $this->normalizeViewParam($request);
 
         $profile = $user->profile;
-        $bought = null;
-        $sold = null;
+        $bought  = null;
+        $sold    = null;
         $trading = null;
+
+        // ▼ 常に表示する：全取引の未返信メッセージ合計
+        $trade_unread_total_all = $this->getAllTradeUnreadTotal($user);
+
+        // ▼ 取引中タブで使用する：一覧内の合計（任意）
         $trade_unread_total = 0;
 
         if ($view === 'buy') {
@@ -28,12 +33,15 @@ class ProfileController extends Controller
         } elseif ($view === 'trade') {
 
             $trading = $this->getTradingItems($user, $request);
-            $trade_unread_total = $trading->sum('unread');
+            $trade_unread_total = (int) $trading->getCollection()->sum('unread');
 
         } else {
 
             $sold = $this->getSoldItems($user, $request);
         }
+
+        // ★ 評価平均
+        $reviewAvg = $user->getReviewAverage();
 
         return view('mypage.index', compact(
             'user',
@@ -42,6 +50,8 @@ class ProfileController extends Controller
             'sold',
             'trading',
             'trade_unread_total',
+            'trade_unread_total_all',
+            'reviewAvg',
             'view'
         ));
     }
@@ -54,7 +64,6 @@ class ProfileController extends Controller
                 $request->merge(['view' => $legacy]);
             }
         }
-
         return (string) $request->query('view', 'sell');
     }
 
@@ -76,28 +85,123 @@ class ProfileController extends Controller
     }
 
     /**
-     * ▼ 追加：取引中の商品一覧
+     * マイページのタブに表示する「全取引の未返信メッセージ合計」を算出
+     */
+    private function getAllTradeUnreadTotal($user): int
+    {
+        $userId = (int) $user->id;
+
+        // 自分が最後に送ったメッセージ日時
+        $myLastMessageSub = DB::table('trade_messages as tm_me')
+            ->select(
+                'tm_me.purchase_id',
+                DB::raw('MAX(tm_me.created_at) as my_last_at')
+            )
+            ->where('tm_me.user_id', $userId)
+            ->where('tm_me.is_deleted', 0)
+            ->groupBy('tm_me.purchase_id');
+
+        // 相手から来ている「未返信メッセージ数」
+        $unreadSub = DB::table('trade_messages as tm_other')
+            ->leftJoinSub($myLastMessageSub, 'my_last', function ($join) {
+                $join->on('tm_other.purchase_id', '=', 'my_last.purchase_id');
+            })
+            ->select(
+                'tm_other.purchase_id',
+                DB::raw('COUNT(*) as unread')
+            )
+            ->where('tm_other.is_deleted', 0)
+            ->where('tm_other.user_id', '!=', $userId)
+            ->where(function ($q) {
+                $q->whereColumn('tm_other.created_at', '>', 'my_last.my_last_at')
+                  ->orWhereNull('my_last.my_last_at');
+            })
+            ->groupBy('tm_other.purchase_id');
+
+        // 取引中（is_done = 0）のみ合計
+        return (int) DB::table('purchases')
+            ->join('items', 'purchases.item_id', '=', 'items.id')
+            ->leftJoinSub($unreadSub, 'unreads', function ($join) {
+                $join->on('purchases.id', '=', 'unreads.purchase_id');
+            })
+            ->where(function ($q) use ($userId) {
+                $q->where('purchases.user_id', $userId)
+                  ->orWhere('items.user_id', $userId);
+            })
+            ->where('purchases.is_done', 0)
+            ->sum(DB::raw('COALESCE(unreads.unread, 0)'));
+    }
+
+    /**
+     * 取引中商品の一覧取得
+     *
+     * - unread:
+     *   自分が最後に送ったメッセージより後に、
+     *   相手から来ているメッセージの件数（未返信数）
+     * - 並び順:
+     *   取引メッセージの最新投稿日が新しい順（FN004）
      */
     private function getTradingItems($user, Request $request)
     {
+        $userId = (int) $user->id;
+
+        // 自分の最後のメッセージ日時
+        $myLastMessageSub = DB::table('trade_messages as tm_me')
+            ->select(
+                'tm_me.purchase_id',
+                DB::raw('MAX(tm_me.created_at) as my_last_at')
+            )
+            ->where('tm_me.user_id', $userId)
+            ->where('tm_me.is_deleted', 0)
+            ->groupBy('tm_me.purchase_id');
+
+        // 相手からの未返信メッセージ数
+        $unreadSub = DB::table('trade_messages as tm_other')
+            ->leftJoinSub($myLastMessageSub, 'my_last', function ($join) {
+                $join->on('tm_other.purchase_id', '=', 'my_last.purchase_id');
+            })
+            ->select(
+                'tm_other.purchase_id',
+                DB::raw('COUNT(*) as unread')
+            )
+            ->where('tm_other.is_deleted', 0)
+            ->where('tm_other.user_id', '!=', $userId)
+            ->where(function ($q) {
+                $q->whereColumn('tm_other.created_at', '>', 'my_last.my_last_at')
+                  ->orWhereNull('my_last.my_last_at');
+            })
+            ->groupBy('tm_other.purchase_id');
+
+        // 最新メッセージ日時
+        $lastMessageSub = DB::table('trade_messages as tm_all')
+            ->select(
+                'tm_all.purchase_id',
+                DB::raw('MAX(tm_all.created_at) as last_message_at')
+            )
+            ->where('tm_all.is_deleted', 0)
+            ->groupBy('tm_all.purchase_id');
+
         return DB::table('purchases')
             ->join('items', 'purchases.item_id', '=', 'items.id')
-            ->where(function ($q) use ($user) {
-                $q->where('purchases.user_id', $user->id)
-                  ->orWhere('items.user_id', $user->id);
+            ->leftJoinSub($unreadSub, 'unreads', function ($join) {
+                $join->on('purchases.id', '=', 'unreads.purchase_id');
             })
+            ->leftJoinSub($lastMessageSub, 'last_msg', function ($join) {
+                $join->on('purchases.id', '=', 'last_msg.purchase_id');
+            })
+            ->where(function ($q) use ($userId) {
+                $q->where('purchases.user_id', $userId)
+                  ->orWhere('items.user_id', $userId);
+            })
+            ->where('purchases.is_done', 0)
             ->select(
                 'purchases.id as purchase_id',
                 'items.name',
                 'items.image',
-
-                DB::raw('(SELECT COUNT(*) FROM trade_messages
-                          WHERE trade_messages.purchase_id = purchases.id
-                          AND trade_messages.user_id != '.$user->id.'
-                          AND trade_messages.is_deleted = 0
-                         ) AS unread')
+                DB::raw('COALESCE(unreads.unread, 0) as unread'),
+                DB::raw('last_msg.last_message_at')
             )
-            ->latest('purchases.created_at')
+            ->orderByDesc('last_msg.last_message_at')
             ->paginate(12, ['*'], 'trade_page')
             ->appends($request->except('trade_page'));
     }
@@ -117,12 +221,16 @@ class ProfileController extends Controller
         $user->save();
 
         $profile = $user->profile ?? new Profile(['user_id' => $user->id]);
-        $profile->postal_code = $data['postal_code'];
+        $profile->postal_code   = $data['postal_code'];
         $profile->address_line1 = $data['address_line1'];
         $profile->address_line2 = $data['address_line2'] ?? null;
 
-        if (isset($data['phone'])) $profile->phone = $data['phone'];
-        if (isset($data['bio'])) $profile->bio = $data['bio'];
+        if (isset($data['phone'])) {
+            $profile->phone = $data['phone'];
+        }
+        if (isset($data['bio'])) {
+            $profile->bio = $data['bio'];
+        }
 
         if ($request->hasFile('avatar')) {
             $path = $request->file('avatar')->store('avatars', 'public');
@@ -144,11 +252,11 @@ class ProfileController extends Controller
     public function storeFirst(Request $request)
     {
         $data = $request->validate([
-            'postal_code' => ['required', 'string', 'size:8', 'regex:/^\d{3}-\d{4}$/'],
+            'postal_code'   => ['required', 'string', 'size:8', 'regex:/^\d{3}-\d{4}$/'],
             'address_line1' => ['required', 'string', 'max:255'],
         ]);
 
-        $user = Auth::user();
+        $user    = Auth::user();
         $profile = $user->profile ?? new Profile(['user_id' => $user->id]);
         $profile->fill($data)->save();
 

@@ -25,10 +25,11 @@ class TradeMessageRequest extends FormRequest
     public function messages(): array
     {
         return [
+            // 本文
             'body.required' => '本文を入力してください',
             'body.max'      => '本文は400文字以内で入力してください',
 
-            // jpeg / png 以外の場合のメッセージ
+            // 画像（jpeg / png 以外）
             'image.image'   => '「.png」または「.jpeg」形式でアップロードしてください',
             'image.mimes'   => '「.png」または「.jpeg」形式でアップロードしてください',
         ];
