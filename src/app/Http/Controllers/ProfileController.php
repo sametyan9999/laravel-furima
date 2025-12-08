@@ -23,7 +23,7 @@ class ProfileController extends Controller
         // ▼ 常に表示する：全取引の未返信メッセージ合計
         $trade_unread_total_all = $this->getAllTradeUnreadTotal($user);
 
-        // ▼ 取引中タブで使用する：一覧内の合計（任意）
+        // ▼ 取引中タブで使う合計
         $trade_unread_total = 0;
 
         if ($view === 'buy') {
@@ -40,7 +40,7 @@ class ProfileController extends Controller
             $sold = $this->getSoldItems($user, $request);
         }
 
-        // ★ 評価平均
+        // 評価平均
         $reviewAvg = $user->getReviewAverage();
 
         return view('mypage.index', compact(
@@ -85,13 +85,14 @@ class ProfileController extends Controller
     }
 
     /**
-     * マイページのタブに表示する「全取引の未返信メッセージ合計」を算出
+     * 全取引の未返信メッセージ合計
+     * 対象: 自分がまだレビューしていない取引のみ
      */
     private function getAllTradeUnreadTotal($user): int
     {
         $userId = (int) $user->id;
 
-        // 自分が最後に送ったメッセージ日時
+        // 自分の最後のメッセージ
         $myLastMessageSub = DB::table('trade_messages as tm_me')
             ->select(
                 'tm_me.purchase_id',
@@ -101,7 +102,7 @@ class ProfileController extends Controller
             ->where('tm_me.is_deleted', 0)
             ->groupBy('tm_me.purchase_id');
 
-        // 相手から来ている「未返信メッセージ数」
+        // 相手の未返信メッセージ
         $unreadSub = DB::table('trade_messages as tm_other')
             ->leftJoinSub($myLastMessageSub, 'my_last', function ($join) {
                 $join->on('tm_other.purchase_id', '=', 'my_last.purchase_id');
@@ -118,34 +119,40 @@ class ProfileController extends Controller
             })
             ->groupBy('tm_other.purchase_id');
 
-        // 取引中（is_done = 0）のみ合計
+        // 自分のレビュー有無
+        $myReviewSub = DB::table('trade_reviews')
+            ->select(
+                'purchase_id',
+                DB::raw('COUNT(*) as my_review_count')
+            )
+            ->where('reviewer_id', $userId)
+            ->groupBy('purchase_id');
+
+        // ★ 自分がレビューしていない取引のみを対象にする
         return (int) DB::table('purchases')
             ->join('items', 'purchases.item_id', '=', 'items.id')
             ->leftJoinSub($unreadSub, 'unreads', function ($join) {
                 $join->on('purchases.id', '=', 'unreads.purchase_id');
             })
+            ->leftJoinSub($myReviewSub, 'my_review', function ($join) {
+                $join->on('purchases.id', '=', 'my_review.purchase_id');
+            })
             ->where(function ($q) use ($userId) {
                 $q->where('purchases.user_id', $userId)
                   ->orWhere('items.user_id', $userId);
             })
-            ->where('purchases.is_done', 0)
+            ->whereNull('my_review.my_review_count')  // ← 修正ポイント
             ->sum(DB::raw('COALESCE(unreads.unread, 0)'));
     }
 
     /**
      * 取引中商品の一覧取得
-     *
-     * - unread:
-     *   自分が最後に送ったメッセージより後に、
-     *   相手から来ているメッセージの件数（未返信数）
-     * - 並び順:
-     *   取引メッセージの最新投稿日が新しい順（FN004）
+     * 条件: 自分がまだレビューしていない取引のみ表示
      */
     private function getTradingItems($user, Request $request)
     {
         $userId = (int) $user->id;
 
-        // 自分の最後のメッセージ日時
         $myLastMessageSub = DB::table('trade_messages as tm_me')
             ->select(
                 'tm_me.purchase_id',
@@ -155,7 +162,6 @@ class ProfileController extends Controller
             ->where('tm_me.is_deleted', 0)
             ->groupBy('tm_me.purchase_id');
 
-        // 相手からの未返信メッセージ数
         $unreadSub = DB::table('trade_messages as tm_other')
             ->leftJoinSub($myLastMessageSub, 'my_last', function ($join) {
                 $join->on('tm_other.purchase_id', '=', 'my_last.purchase_id');
@@ -172,7 +178,6 @@ class ProfileController extends Controller
             })
             ->groupBy('tm_other.purchase_id');
 
-        // 最新メッセージ日時
         $lastMessageSub = DB::table('trade_messages as tm_all')
             ->select(
                 'tm_all.purchase_id',
@@ -181,6 +186,16 @@ class ProfileController extends Controller
             ->where('tm_all.is_deleted', 0)
             ->groupBy('tm_all.purchase_id');
 
+        // 自分のレビュー有無
+        $myReviewSub = DB::table('trade_reviews')
+            ->select(
+                'purchase_id',
+                DB::raw('COUNT(*) as my_review_count')
+            )
+            ->where('reviewer_id', $userId)
+            ->groupBy('purchase_id');
+
+        // ★ 自分がレビューしていない取引のみを一覧表示
         return DB::table('purchases')
             ->join('items', 'purchases.item_id', '=', 'items.id')
             ->leftJoinSub($unreadSub, 'unreads', function ($join) {
@@ -189,11 +204,14 @@ class ProfileController extends Controller
             ->leftJoinSub($lastMessageSub, 'last_msg', function ($join) {
                 $join->on('purchases.id', '=', 'last_msg.purchase_id');
             })
+            ->leftJoinSub($myReviewSub, 'my_review', function ($join) {
+                $join->on('purchases.id', '=', 'my_review.purchase_id');
+            })
             ->where(function ($q) use ($userId) {
                 $q->where('purchases.user_id', $userId)
                   ->orWhere('items.user_id', $userId);
             })
-            ->where('purchases.is_done', 0)
+            ->whereNull('my_review.my_review_count')  // ← 修正ポイント
             ->select(
                 'purchases.id as purchase_id',
                 'items.name',

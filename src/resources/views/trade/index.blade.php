@@ -34,7 +34,6 @@
     <section class="trade-main">
 
       @php
-        // ログインユーザーが「購入者」か「出品者」かを判定
         $isBuyer  = ($purchase->user_id === $me->id);
         $isSeller = ($purchase->item->user_id === $me->id);
       @endphp
@@ -52,8 +51,11 @@
           </span>
         </div>
 
-        {{-- ★ 取引完了ボタンは「購入者」だけに表示 --}}
-        @if(!$purchase->is_done && $isBuyer)
+        {{-- ★ 取引完了ボタン（購入者 or 出品者） --}}
+        @if(
+          !$alreadyReviewed &&
+          ($isBuyer || ($isSeller && $buyerReviewed))
+        )
           <form method="post" action="{{ route('trade.finish', $purchase) }}">
             @csrf
             <button class="btn-finish" type="submit">取引を完了する</button>
@@ -61,7 +63,7 @@
         @endif
       </div>
 
-      {{-- 商品情報ブロック --}}
+      {{-- 商品情報 --}}
       <div class="trade-item-box">
         <div class="trade-item-img">
           <div class="trade-item-img__inner">
@@ -74,13 +76,11 @@
         </div>
       </div>
 
-      {{-- 取引完了後の評価モーダル --}}
+      {{-- 評価モーダル --}}
       @if (
-        // 購入者：取引完了ボタン押下直後のみ
         ($isBuyer && session('review_modal') && !$alreadyReviewed)
         ||
-        // 出品者：購入者が完了済み & 自分は未評価のとき
-        ($isSeller && $purchase->is_done && !$alreadyReviewed)
+        ($isSeller && $buyerReviewed && session('review_modal') && !$alreadyReviewed)
       )
         <div class="trade-review-modal">
           <div class="trade-review-modal__inner">
@@ -121,7 +121,6 @@
               });
             };
 
-            // 初期値：★3
             updateStars(3);
 
             stars.forEach(star => {
@@ -139,8 +138,8 @@
       <div class="trade-message-list">
         @foreach($messages as $msg)
 
+          {{-- 自分 --}}
           @if($msg->user_id === $me->id)
-            {{-- 自分 --}}
             <div class="trade-message trade-message--me">
               <div class="trade-msg-header trade-msg-header--me">
                 <span class="trade-msg-username">{{ $me->name }}</span>
@@ -157,7 +156,7 @@
                     <div class="trade-msg-text trade-msg-text--me">{{ $msg->body }}</div>
                   @endif
                   @if($msg->image_path)
-                    <img src="{{ asset('storage/' . $msg->image_path) }}" class="trade-msg-image" alt="添付画像">
+                    <img src="{{ asset('storage/' . $msg->image_path) }}" class="trade-msg-image">
                   @endif
                 @else
                   <div class="trade-msg-deleted">このメッセージは削除されました</div>
@@ -176,8 +175,8 @@
               @endif
             </div>
 
+          {{-- 相手 --}}
           @else
-            {{-- 相手 --}}
             <div class="trade-message trade-message--other">
               <div class="trade-msg-header">
                 <div class="avatar-circle avatar-circle--sm">
@@ -194,7 +193,7 @@
                     <div class="trade-msg-text">{{ $msg->body }}</div>
                   @endif
                   @if($msg->image_path)
-                    <img src="{{ asset('storage/' . $msg->image_path) }}" class="trade-msg-image" alt="添付画像">
+                    <img src="{{ asset('storage/' . $msg->image_path) }}" class="trade-msg-image">
                   @endif
                 @else
                   <div class="trade-msg-deleted">このメッセージは削除されました</div>
@@ -206,7 +205,7 @@
         @endforeach
       </div>
 
-      {{-- ▼ メッセージ入力フォーム直上のバリデーションメッセージ --}}
+      {{-- バリデーション --}}
       @if ($errors->any())
         <div class="trade-form-error">
           <ul>
@@ -217,7 +216,7 @@
         </div>
       @endif
 
-      {{-- メッセージ入力フォーム --}}
+      {{-- メッセージフォーム --}}
       <form method="post"
             action="{{ route('trade.store', $purchase) }}"
             enctype="multipart/form-data"
@@ -241,10 +240,37 @@
           </label>
 
           <button class="trade-send-btn" type="submit">
-            <img src="{{ asset('images/icon-send.svg') }}" alt="送信">
+            <img src="{{ asset('images/icon-send.svg') }}">
           </button>
         </div>
       </form>
+
+      {{-- 入力保持 --}}
+      <script>
+        document.addEventListener('DOMContentLoaded', () => {
+          const input = document.querySelector('.trade-form-input');
+          const form  = document.querySelector('.trade-form');
+
+          if (!input) return;
+
+          const storageKey = 'trade_draft_{{ $purchase->id }}';
+
+          if (!input.value) {
+            const saved = localStorage.getItem(storageKey);
+            if (saved) input.value = saved;
+          }
+
+          input.addEventListener('input', () => {
+            localStorage.setItem(storageKey, input.value);
+          });
+
+          if (form) {
+            form.addEventListener('submit', () => {
+              localStorage.removeItem(storageKey);
+            });
+          }
+        });
+      </script>
 
     </section>
   </div>
