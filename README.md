@@ -195,7 +195,7 @@ http://localhost/storage/... で閲覧できるようにします。
 ## テスト実行方法
 コンテナ内で以下を実行してテストを実施します。
 
-1. ホスト側で PHP コンテナに入る
+1. PHP コンテナに入る
     ```bash
     docker compose exec php bash
     ```
