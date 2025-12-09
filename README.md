@@ -147,6 +147,12 @@ STRIPE_SECRET=sk_test_******************************
     ```bash
     php artisan db:seed
     ```
+
+※開発中に一度テーブルを全てリセットしてからデータを入れ直したい場合
+```
+php artisan migrate:fresh --seed
+```
+
 ### Seeder内容
 
 初期データには以下が含まれます：
@@ -189,10 +195,15 @@ http://localhost/storage/... で閲覧できるようにします。
 ## テスト実行方法
 コンテナ内で以下を実行してテストを実施します。
 
-```bash
-docker compose exec php bash
-php artisan test
-```
+1. ホスト側で PHP コンテナに入る
+    ```bash
+    docker compose exec php bash
+    ```
+
+2. コンテナ内でテストを実行
+    ```bash
+    php artisan test
+    ```
 ---
 
 ## 決済処理フロー（Stripe）

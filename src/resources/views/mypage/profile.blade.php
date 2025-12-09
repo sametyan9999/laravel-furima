@@ -1,4 +1,3 @@
-{{-- resources/views/mypage/profile.blade.php --}}
 @extends('layouts.app')
 @section('title','プロフィール設定')
 

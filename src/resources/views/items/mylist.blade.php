@@ -1,4 +1,3 @@
-{{-- resources/views/items/mylist.blade.php --}}
 @extends('layouts.app')
 @section('title','マイリスト')
 

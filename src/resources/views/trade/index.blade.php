@@ -1,4 +1,3 @@
-{{-- resources/views/trade/index.blade.php --}}
 @extends('layouts.app')
 @section('title', '取引チャット')
 
