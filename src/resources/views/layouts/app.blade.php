@@ -1,3 +1,4 @@
+{{-- resources/views/layouts/app.blade.php --}}
 <!doctype html>
 <html lang="ja">
 <head>
@@ -15,7 +16,9 @@
     @include('components.header')
   @endif
 
-  <main class="container">@yield('content')</main>
+  <main class="{{ request()->routeIs('trade.*') ? 'container container--trade' : 'container' }}">
+    @yield('content')
+  </main>
 
   @stack('scripts')
 </body>

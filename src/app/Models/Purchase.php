@@ -26,10 +26,14 @@ class Purchase extends Model
         'shipping_postal_code',
         'shipping_address1',
         'shipping_address2',
+        'buyer_read_at',
+        'seller_read_at',
     ];
 
     protected $casts = [
-        'purchased_at' => 'datetime',
+        'purchased_at'   => 'datetime',
+        'buyer_read_at'  => 'datetime',
+        'seller_read_at' => 'datetime',
     ];
 
     protected static function booted(): void

@@ -7,6 +7,7 @@ use App\Models\Purchase;
 use App\Models\TradeMessage;
 use App\Models\TradeReview;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TradeMessageController extends Controller
 {
@@ -29,30 +30,93 @@ class TradeMessageController extends Controller
                 ->first();
         }
 
-        $sidebarTrades = Purchase::with('item')
-            ->where(function ($q) use ($me) {
-                $q->where('user_id', $me->id)
-                  ->orWhereHas('item', fn($q2) => $q2->where('user_id', $me->id));
+        // ▼ 既読更新（未読件数＝未読）
+        if ($purchase->user_id === $me->id) {
+            $purchase->buyer_read_at = now();
+            $purchase->save();
+        } elseif ($purchase->item->user_id === $me->id) {
+            $purchase->seller_read_at = now();
+            $purchase->save();
+        }
+
+        $userId = (int) $me->id;
+
+        $unreadSub = DB::table('trade_messages as tm')
+            ->join('purchases as p', 'tm.purchase_id', '=', 'p.id')
+            ->join('items as i', 'p.item_id', '=', 'i.id')
+            ->select('tm.purchase_id', DB::raw('COUNT(*) as unread'))
+            ->where('tm.is_deleted', 0)
+            ->where('tm.user_id', '!=', $userId)
+            ->where(function ($q) use ($userId) {
+
+                $q->where(function ($q2) use ($userId) {
+                    $q2->where('p.user_id', $userId)
+                       ->where(function ($q3) {
+                           $q3->whereColumn('tm.created_at', '>', 'p.buyer_read_at')
+                              ->orWhereNull('p.buyer_read_at');
+                       });
+                })
+                ->orWhere(function ($q2) use ($userId) {
+                    $q2->where('i.user_id', $userId)
+                       ->where(function ($q3) {
+                           $q3->whereColumn('tm.created_at', '>', 'p.seller_read_at')
+                              ->orWhereNull('p.seller_read_at');
+                       });
+                });
             })
-            ->leftJoin('trade_reviews as r', function ($join) use ($me) {
-                $join->on('purchases.id', '=', 'r.purchase_id')
-                     ->where('r.reviewer_id', $me->id);
+            ->groupBy('tm.purchase_id');
+
+        $lastMessageSub = DB::table('trade_messages as tm_all')
+            ->select('tm_all.purchase_id', DB::raw('MAX(tm_all.created_at) as last_message_at'))
+            ->where('tm_all.is_deleted', 0)
+            ->groupBy('tm_all.purchase_id');
+
+        $myReviewSub = DB::table('trade_reviews')
+            ->select('purchase_id', DB::raw('COUNT(*) as my_review_count'))
+            ->where('reviewer_id', $userId)
+            ->groupBy('purchase_id');
+
+        $sidebarTrades = DB::table('purchases')
+            ->join('items', 'purchases.item_id', '=', 'items.id')
+            ->leftJoinSub($unreadSub, 'unreads', function ($join) {
+                $join->on('purchases.id', '=', 'unreads.purchase_id');
             })
-            ->whereNull('r.id')
-            ->orderByDesc(
-                TradeMessage::selectRaw('MAX(trade_messages.created_at)')
-                    ->whereColumn('trade_messages.purchase_id', 'purchases.id')
+            ->leftJoinSub($lastMessageSub, 'last_msg', function ($join) {
+                $join->on('purchases.id', '=', 'last_msg.purchase_id');
+            })
+            ->leftJoinSub($myReviewSub, 'my_review', function ($join) {
+                $join->on('purchases.id', '=', 'my_review.purchase_id');
+            })
+            ->where(function ($q) use ($userId) {
+                $q->where('purchases.user_id', $userId)
+                  ->orWhere('items.user_id', $userId);
+            })
+            ->whereNull('my_review.my_review_count')
+            ->select(
+                'purchases.id as id',
+                'items.name as name',
+                'items.image as image',
+                DB::raw('COALESCE(unreads.unread, 0) as unread'),
+                DB::raw('last_msg.last_message_at as last_message_at')
             )
-            ->select('purchases.*')
+            ->orderByDesc('last_msg.last_message_at')
             ->get()
-            ->map(function ($p) {
-                $item = $p->item;
-                return (object)[
-                    'id'        => $p->id,
-                    'name'      => $item?->name ?? '',
-                    'image_url' => $item?->image_url ?? null,
-                    'image'     => $item?->image ?? '',
-                ];
+            ->map(function ($row) {
+                $image = $row->image ?? null;
+
+                $imageUrl = null;
+                if ($image) {
+                    if (preg_match('#^https?://#', $image) || str_starts_with($image, '/storage/')) {
+                        $imageUrl = $image;
+                    } elseif (str_starts_with($image, 'public/')) {
+                        $imageUrl = '/storage/' . substr($image, 7);
+                    } else {
+                        $imageUrl = \Illuminate\Support\Facades\Storage::url($image);
+                    }
+                }
+
+                $row->image_url = $imageUrl;
+                return $row;
             });
 
         $messages = TradeMessage::with('user:id,name')

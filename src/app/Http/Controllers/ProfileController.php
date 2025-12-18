@@ -20,7 +20,7 @@ class ProfileController extends Controller
         $sold    = null;
         $trading = null;
 
-        // ▼ 常に表示する：全取引の未返信メッセージ合計
+        // ▼ 常に表示する：全取引の未読メッセージ合計
         $trade_unread_total_all = $this->getAllTradeUnreadTotal($user);
 
         // ▼ 取引中タブで使う合計
@@ -85,41 +85,38 @@ class ProfileController extends Controller
     }
 
     /**
-     * 全取引の未返信メッセージ合計
+     * 全取引の未読メッセージ合計
      * 対象: 自分がまだレビューしていない取引のみ
      */
     private function getAllTradeUnreadTotal($user): int
     {
         $userId = (int) $user->id;
 
-        // 自分の最後のメッセージ
-        $myLastMessageSub = DB::table('trade_messages as tm_me')
-            ->select(
-                'tm_me.purchase_id',
-                DB::raw('MAX(tm_me.created_at) as my_last_at')
-            )
-            ->where('tm_me.user_id', $userId)
-            ->where('tm_me.is_deleted', 0)
-            ->groupBy('tm_me.purchase_id');
+        $unreadSub = DB::table('trade_messages as tm')
+            ->join('purchases as p', 'tm.purchase_id', '=', 'p.id')
+            ->join('items as i', 'p.item_id', '=', 'i.id')
+            ->select('tm.purchase_id', DB::raw('COUNT(*) as unread'))
+            ->where('tm.is_deleted', 0)
+            ->where('tm.user_id', '!=', $userId)
+            ->where(function ($q) use ($userId) {
 
-        // 相手の未返信メッセージ
-        $unreadSub = DB::table('trade_messages as tm_other')
-            ->leftJoinSub($myLastMessageSub, 'my_last', function ($join) {
-                $join->on('tm_other.purchase_id', '=', 'my_last.purchase_id');
+                $q->where(function ($q2) use ($userId) {
+                    $q2->where('p.user_id', $userId)
+                       ->where(function ($q3) {
+                           $q3->whereColumn('tm.created_at', '>', 'p.buyer_read_at')
+                              ->orWhereNull('p.buyer_read_at');
+                       });
+                })
+                ->orWhere(function ($q2) use ($userId) {
+                    $q2->where('i.user_id', $userId)
+                       ->where(function ($q3) {
+                           $q3->whereColumn('tm.created_at', '>', 'p.seller_read_at')
+                              ->orWhereNull('p.seller_read_at');
+                       });
+                });
             })
-            ->select(
-                'tm_other.purchase_id',
-                DB::raw('COUNT(*) as unread')
-            )
-            ->where('tm_other.is_deleted', 0)
-            ->where('tm_other.user_id', '!=', $userId)
-            ->where(function ($q) {
-                $q->whereColumn('tm_other.created_at', '>', 'my_last.my_last_at')
-                  ->orWhereNull('my_last.my_last_at');
-            })
-            ->groupBy('tm_other.purchase_id');
+            ->groupBy('tm.purchase_id');
 
-        // 自分のレビュー有無
         $myReviewSub = DB::table('trade_reviews')
             ->select(
                 'purchase_id',
@@ -128,7 +125,6 @@ class ProfileController extends Controller
             ->where('reviewer_id', $userId)
             ->groupBy('purchase_id');
 
-        // ★ 自分がレビューしていない取引のみを対象にする
         return (int) DB::table('purchases')
             ->join('items', 'purchases.item_id', '=', 'items.id')
             ->leftJoinSub($unreadSub, 'unreads', function ($join) {
@@ -141,7 +137,7 @@ class ProfileController extends Controller
                 $q->where('purchases.user_id', $userId)
                   ->orWhere('items.user_id', $userId);
             })
-            ->whereNull('my_review.my_review_count')  // ← 修正ポイント
+            ->whereNull('my_review.my_review_count')
             ->sum(DB::raw('COALESCE(unreads.unread, 0)'));
     }
 
@@ -153,30 +149,30 @@ class ProfileController extends Controller
     {
         $userId = (int) $user->id;
 
-        $myLastMessageSub = DB::table('trade_messages as tm_me')
-            ->select(
-                'tm_me.purchase_id',
-                DB::raw('MAX(tm_me.created_at) as my_last_at')
-            )
-            ->where('tm_me.user_id', $userId)
-            ->where('tm_me.is_deleted', 0)
-            ->groupBy('tm_me.purchase_id');
+        $unreadSub = DB::table('trade_messages as tm')
+            ->join('purchases as p', 'tm.purchase_id', '=', 'p.id')
+            ->join('items as i', 'p.item_id', '=', 'i.id')
+            ->select('tm.purchase_id', DB::raw('COUNT(*) as unread'))
+            ->where('tm.is_deleted', 0)
+            ->where('tm.user_id', '!=', $userId)
+            ->where(function ($q) use ($userId) {
 
-        $unreadSub = DB::table('trade_messages as tm_other')
-            ->leftJoinSub($myLastMessageSub, 'my_last', function ($join) {
-                $join->on('tm_other.purchase_id', '=', 'my_last.purchase_id');
+                $q->where(function ($q2) use ($userId) {
+                    $q2->where('p.user_id', $userId)
+                       ->where(function ($q3) {
+                           $q3->whereColumn('tm.created_at', '>', 'p.buyer_read_at')
+                              ->orWhereNull('p.buyer_read_at');
+                       });
+                })
+                ->orWhere(function ($q2) use ($userId) {
+                    $q2->where('i.user_id', $userId)
+                       ->where(function ($q3) {
+                           $q3->whereColumn('tm.created_at', '>', 'p.seller_read_at')
+                              ->orWhereNull('p.seller_read_at');
+                       });
+                });
             })
-            ->select(
-                'tm_other.purchase_id',
-                DB::raw('COUNT(*) as unread')
-            )
-            ->where('tm_other.is_deleted', 0)
-            ->where('tm_other.user_id', '!=', $userId)
-            ->where(function ($q) {
-                $q->whereColumn('tm_other.created_at', '>', 'my_last.my_last_at')
-                  ->orWhereNull('my_last.my_last_at');
-            })
-            ->groupBy('tm_other.purchase_id');
+            ->groupBy('tm.purchase_id');
 
         $lastMessageSub = DB::table('trade_messages as tm_all')
             ->select(
@@ -186,7 +182,6 @@ class ProfileController extends Controller
             ->where('tm_all.is_deleted', 0)
             ->groupBy('tm_all.purchase_id');
 
-        // 自分のレビュー有無
         $myReviewSub = DB::table('trade_reviews')
             ->select(
                 'purchase_id',
@@ -195,7 +190,6 @@ class ProfileController extends Controller
             ->where('reviewer_id', $userId)
             ->groupBy('purchase_id');
 
-        // ★ 自分がレビューしていない取引のみを一覧表示
         return DB::table('purchases')
             ->join('items', 'purchases.item_id', '=', 'items.id')
             ->leftJoinSub($unreadSub, 'unreads', function ($join) {
@@ -211,7 +205,7 @@ class ProfileController extends Controller
                 $q->where('purchases.user_id', $userId)
                   ->orWhere('items.user_id', $userId);
             })
-            ->whereNull('my_review.my_review_count')  // ← 修正ポイント
+            ->whereNull('my_review.my_review_count')
             ->select(
                 'purchases.id as purchase_id',
                 'items.name',

@@ -1,11 +1,16 @@
+{{-- resources/views/components/header.blade.php --}}
+@php
+  $isTradePage = request()->routeIs('trade.*');
+@endphp
+
 <header class="gt-header">
-  <div class="gt-header__inner container">
+  <div class="gt-header__inner {{ $isTradePage ? '' : 'container' }}">
     {{-- ロゴ：クリックでトップへ --}}
     <a href="{{ route('items.index', ['reset' => 1]) }}" class="gt-logo" aria-label="COACHTECH top">
       <img src="{{ asset('images/coachtech-logo.svg') }}" alt="COACHTECH">
     </a>
 
-    @if (!request()->routeIs('verification.*'))
+    @if (!request()->routeIs('verification.*') && !$isTradePage)
       {{-- 通常ページのみ表示 --}}
       <form action="{{ route('items.index') }}" method="get" class="gt-search" role="search" aria-label="商品検索">
         <input type="search" name="q" value="{{ request('q') }}" placeholder="なにをお探しですか？">

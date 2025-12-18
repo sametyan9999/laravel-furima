@@ -19,6 +19,10 @@
             <div class="sidebar-item__inner">
               <div class="sidebar-item__thumb">
                 <img src="{{ $t->image_url ?? $t->image }}" alt="{{ $t->name }}">
+
+                @if(!empty($t->unread) && $t->unread > 0)
+                  <span class="sidebar-item__badge">{{ $t->unread }}</span>
+                @endif
               </div>
               <div class="sidebar-item__name">
                 {{ $t->name }}
@@ -50,11 +54,8 @@
           </span>
         </div>
 
-        {{-- ★ 取引完了ボタン（購入者 or 出品者） --}}
-        @if(
-          !$alreadyReviewed &&
-          ($isBuyer || ($isSeller && $buyerReviewed))
-        )
+        {{-- ★ 取引完了ボタン（購入者のみ） --}}
+        @if(!$alreadyReviewed && $isBuyer)
           <form method="post" action="{{ route('trade.finish', $purchase) }}">
             @csrf
             <button class="btn-finish" type="submit">取引を完了する</button>
@@ -79,7 +80,7 @@
       @if (
         ($isBuyer && session('review_modal') && !$alreadyReviewed)
         ||
-        ($isSeller && $buyerReviewed && session('review_modal') && !$alreadyReviewed)
+        ($isSeller && $purchase->is_done && !$alreadyReviewed)
       )
         <div class="trade-review-modal">
           <div class="trade-review-modal__inner">
@@ -161,17 +162,6 @@
                   <div class="trade-msg-deleted">このメッセージは削除されました</div>
                 @endif
               </div>
-
-              @if(!$msg->is_deleted)
-                <div class="trade-msg-actions">
-                  <a href="{{ route('trade.show', ['purchase' => $purchase->id, 'edit' => $msg->id]) }}" class="link-btn">編集</a>
-                  <form action="{{ route('trade.delete', [$purchase, $msg]) }}" method="post">
-                    @csrf
-                    @method('delete')
-                    <button type="submit" class="link-btn">削除</button>
-                  </form>
-                </div>
-              @endif
             </div>
 
           {{-- 相手 --}}
@@ -204,17 +194,6 @@
         @endforeach
       </div>
 
-      {{-- バリデーション --}}
-      @if ($errors->any())
-        <div class="trade-form-error">
-          <ul>
-            @foreach ($errors->all() as $error)
-              <li>{{ $error }}</li>
-            @endforeach
-          </ul>
-        </div>
-      @endif
-
       {{-- メッセージフォーム --}}
       <form method="post"
             action="{{ route('trade.store', $purchase) }}"
@@ -222,15 +201,10 @@
             class="trade-form">
         @csrf
 
-        @if(!empty($editingMessage))
-          <input type="hidden" name="message_id" value="{{ $editingMessage->id }}">
-        @endif
-
         <input type="text"
                name="body"
                class="trade-form-input"
-               placeholder="取引メッセージを記入してください"
-               value="{{ old('body', optional($editingMessage)->body) }}">
+               placeholder="取引メッセージを記入してください">
 
         <div class="trade-form-actions">
           <label class="trade-form-image-btn">
@@ -243,33 +217,6 @@
           </button>
         </div>
       </form>
-
-      {{-- 入力保持 --}}
-      <script>
-        document.addEventListener('DOMContentLoaded', () => {
-          const input = document.querySelector('.trade-form-input');
-          const form  = document.querySelector('.trade-form');
-
-          if (!input) return;
-
-          const storageKey = 'trade_draft_{{ $purchase->id }}';
-
-          if (!input.value) {
-            const saved = localStorage.getItem(storageKey);
-            if (saved) input.value = saved;
-          }
-
-          input.addEventListener('input', () => {
-            localStorage.setItem(storageKey, input.value);
-          });
-
-          if (form) {
-            form.addEventListener('submit', () => {
-              localStorage.removeItem(storageKey);
-            });
-          }
-        });
-      </script>
 
     </section>
   </div>

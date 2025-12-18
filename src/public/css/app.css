@@ -390,3 +390,9 @@ html,
 body {
     overflow-x: hidden;
 }
+
+/* trade only: main を横いっぱいにする */
+.container--trade {
+    max-width: none;
+    padding: 0;
+}
