@@ -194,6 +194,17 @@
         @endforeach
       </div>
 
+      {{-- ▼ バリデーション表示 --}}
+      @if($errors->any())
+        <div class="trade-form-error">
+          <ul>
+            @foreach($errors->all() as $error)
+              <li>{{ $error }}</li>
+            @endforeach
+          </ul>
+        </div>
+      @endif
+
       {{-- メッセージフォーム --}}
       <form method="post"
             action="{{ route('trade.store', $purchase) }}"
@@ -204,7 +215,8 @@
         <input type="text"
                name="body"
                class="trade-form-input"
-               placeholder="取引メッセージを記入してください">
+               placeholder="取引メッセージを記入してください"
+               value="{{ old('body') }}">
 
         <div class="trade-form-actions">
           <label class="trade-form-image-btn">
